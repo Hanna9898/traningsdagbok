@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="theme-color" content="#0f1220">
+<meta name="description" content="Din personliga träningsdagbok med AI-coach">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Träningsdagbok">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Träningsdagbok AI</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -17,9 +26,12 @@
   --border:rgba(255,255,255,0.1);
   --border-light:rgba(255,255,255,0.06);
   --text:#f1f5f9;
+  --text-heading:#ffffff;
   --text-secondary:#94a3b8;
   --text-muted:#64748b;
   --accent:#818cf8;
+  --accent-bright:#a5b4fc;
+  --stat-gradient:linear-gradient(135deg,#818cf8 0%,#22d3ee 50%,#e879f9 100%);
   --accent-hover:#6366f1;
   --accent-light:rgba(99,102,241,0.15);
   --accent-border:rgba(99,102,241,0.3);
@@ -95,13 +107,13 @@ body::after{
 }
 
 .btn-p{
-  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  background:linear-gradient(135deg,#818cf8 0%,#a78bfa 55%,#c084fc 100%);
   color:#fff;
-  box-shadow:0 4px 16px var(--accent-glow);
+  box-shadow:0 4px 20px rgba(167,139,250,0.5),inset 0 1px 0 rgba(255,255,255,0.18);
 }
 .btn-p:hover:not(:disabled){
-  background:linear-gradient(135deg,#4f46e5,#7c3aed);
-  box-shadow:0 6px 24px rgba(99,102,241,0.45);
+  background:linear-gradient(135deg,#6366f1,#9333ea);
+  box-shadow:0 6px 28px rgba(129,140,248,0.55);
 }
 .btn-p:disabled{opacity:.45;cursor:not-allowed}
 
@@ -146,6 +158,18 @@ select.inp{
 }
 select.inp option{background:#1e1b4b;color:var(--text)}
 textarea.inp{resize:vertical;min-height:80px}
+
+.watch-drop{
+  border:2px dashed rgba(99,102,241,0.35);
+  border-radius:var(--radius-lg);
+  background:rgba(99,102,241,0.06);
+  padding:24px 16px;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .15s,background .15s;
+}
+.watch-drop:hover,.watch-drop.drag{border-color:rgba(99,102,241,0.65);background:rgba(99,102,241,0.12)}
+.watch-drop.busy{opacity:.65;pointer-events:none}
 
 /* Sidebar */
 .sidebar{
@@ -246,13 +270,22 @@ textarea.inp{resize:vertical;min-height:80px}
 
 /* Stat cards */
 .stat-card{background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.06))}
-.stat-value{font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.stat-value{
+  font-size:28px;font-weight:700;letter-spacing:-.02em;
+  background:var(--stat-gradient);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
 .stat-label{font-size:11px;color:var(--text-secondary);margin-top:4px}
+.metric-num{
+  font-weight:700;
+  background:var(--stat-gradient);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
 
 /* Labels & helpers */
 .lbl{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px}
 .field-label{display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px}
-.page-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.page-title{font-size:22px;font-weight:700;color:var(--text-heading);letter-spacing:-.02em}
 .page-subtitle{font-size:13px;color:var(--text-secondary)}
 .surface-muted{background:rgba(255,255,255,0.05);border-radius:10px}
 .row-divider{border-bottom:1px solid var(--border-light)}
@@ -298,7 +331,7 @@ textarea.inp{resize:vertical;min-height:80px}
   box-shadow:0 8px 32px rgba(49,46,129,0.25);
 }
 .dash-hero .stat-value{
-  background:linear-gradient(135deg,#c7d2fe,#e9d5ff);
+  background:linear-gradient(135deg,#a5b4fc 0%,#22d3ee 45%,#e879f9 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
 .dash-hero .stat-label{color:rgba(199,210,254,0.75)}
@@ -323,7 +356,7 @@ textarea.inp{resize:vertical;min-height:80px}
 }
 .hero-spotlight-num{
   font-size:52px;font-weight:800;line-height:1;letter-spacing:-.03em;
-  background:linear-gradient(135deg,#fff 0%,#c7d2fe 55%,#e9d5ff 100%);
+  background:linear-gradient(135deg,#fff 0%,#67e8f9 30%,#a78bfa 65%,#f0abfc 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
   text-shadow:none;
 }
@@ -357,7 +390,7 @@ textarea.inp{resize:vertical;min-height:80px}
 }
 .info-card-header:hover{background:rgba(255,255,255,0.03)}
 .info-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:24px;height:24px}
-.info-title{flex:1;font-size:15px;font-weight:600;color:var(--text)}
+.info-title{flex:1;font-size:15px;font-weight:600;color:var(--text-heading)}
 .info-chevron{color:var(--text-muted);transition:transform .2s;flex-shrink:0}
 .info-card-body{display:none;padding:0 18px 18px}
 .info-card-body.open{display:block}
@@ -415,7 +448,7 @@ textarea.inp{resize:vertical;min-height:80px}
   padding:16px 18px;border-radius:12px;
   background:rgba(255,255,255,0.04);border:1px solid var(--border-light);
 }
-.pass-card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
+.pass-card-title{font-size:15px;font-weight:600;color:var(--text-heading);margin-bottom:4px}
 .pass-card-purpose{font-size:12px;color:var(--text-secondary);line-height:1.55;margin-bottom:8px}
 .pass-card-example{font-size:12px;color:#c7d2fe;line-height:1.5}
 .pass-table{width:100%;border-collapse:collapse;font-size:13px}
@@ -485,7 +518,7 @@ textarea.inp{resize:vertical;min-height:80px}
 // STATE
 // ──────────────────────────────────────────────
 const SK = 'tdbok-v4';
-function fresh(){return{user:{name:'',age:null,rhr:null,mhr:null,level:null,ppw:null},goal:null,workouts:[],last:null};}
+function fresh(){return{user:{name:'',age:null,rhr:null,mhr:null,level:null,ppw:null,focus:'loping'},goal:null,workouts:[],last:null};}
 function loadState(){
   try{
     const raw=JSON.parse(localStorage.getItem(SK)||'{}');
@@ -551,6 +584,7 @@ function render(){
   const fns={dash:vDash,log:vLog,det:()=>vDet(VP.id),edit:()=>vEdit(VP.id),hist:vHist,goal:vGoal,plan:vPlan,info:vInfo,ai:vAI,prof:vProf};
   document.getElementById('content').innerHTML=(fns[V]||vDash)();
   setTimeout(initCharts,60);
+  if(V==='log')setTimeout(initWatchImport,0);
 }
 
 // ──────────────────────────────────────────────
@@ -597,6 +631,7 @@ function ico(name,sz=18,col){
     moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
     trending:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
     check:'<path d="M20 6 9 17l-5-5"/>',
+    upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
   };
   const colStyle=col?`color:${col};`:'';
   return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;${colStyle}">${d[name]||d.zap}</svg>`;
@@ -629,6 +664,13 @@ const LEVELS={
   avancerad:{label:'Avancerad',desc:'Du har flera års erfarenhet och tål högre träningsvolym.'},
 };
 
+const TRAINING_FOCUS={
+  loping:{label:'Löpning',desc:'Du fokuserar främst på löpning.',short:'löpare'},
+  hybrid:{label:'Hybrid (löp + styrka)',desc:'Du kombinerar löpning med styrketräning.',short:'hybridlöpare'},
+};
+function userFocus(){return S.user.focus||'loping';}
+function isHybrid(){return userFocus()==='hybrid';}
+
 const PASS_BIB=[
   {key:'distans',logKey:'distans',label:'Distans',audience:'Alla',icon:'heart',zone:2,
    purpose:'Bygga uthållighet',
@@ -648,6 +690,12 @@ const PASS_BIB=[
   {key:'aterhamtning',logKey:'aterhamtning',label:'Återhämtningspass',audience:'Alla',icon:'moon',zone:1,
    purpose:'Aktiv vila',
    examples:'20–40 min mycket lätt – du ska känna dig piggare efteråt, inte tröttare.'},
+  {key:'styrka',logKey:'styrka',label:'Styrketräning',audience:'Hybrid',icon:'dumbbell',zone:null,isStrength:true,logType:'gym',
+   purpose:'Basstyrka som komplement till löpning',
+   examples:'Knäböj, utfall, höftlyft och core – 30–45 min, 2–3 set per övning, måttlig belastning.'},
+  {key:'styrka_lop',logKey:'styrka_lop',label:'Löpspecifik styrka',audience:'Hybrid',icon:'dumbbell',zone:null,isStrength:true,logType:'gym',
+   purpose:'Ben, fotled och core för bättre löpekonomi',
+   examples:'Enbens höftlyft, calf raises, step-ups och sidoplankan – gärna inte samma dag som hårt löppass.'},
 ];
 
 const GUIDE_BY_LEVEL={
@@ -680,9 +728,44 @@ const GUIDE_BY_LEVEL={
   },
 };
 
+const GUIDE_HYBRID_BY_LEVEL={
+  nyborjare:{
+    title:'Råd för nybörjare (hybrid)',
+    tips:[
+      'Börja med 2 lugna löppass och 1 kort styrkepass per vecka – låt kroppen vänja sig vid båda.',
+      'Placera styrka på vilodagar eller efter lugna löppass, inte före intervaller eller långpass.',
+      'Prioritera teknik framför tung vikt – kroppen ska känna sig starkare, inte sliten.',
+      'Öka antal pass långsamt – max 5–10 % mer belastning per vecka totalt.',
+    ],
+  },
+  motionar:{
+    title:'Råd för motionärer (hybrid)',
+    tips:[
+      'Balansera 2–3 löppass med 1–2 styrkepass – styrkan ska stödja löpningen, inte ta över.',
+      'Undvik tung styrka dagen före intervaller, tröskel eller långpass.',
+      'Fokusera på ben, höfter och core – det ger bäst effekt för löpare.',
+      'Ett längre lugnt löppass plus ett basstyrkepass räcker långt för de flesta mål.',
+    ],
+  },
+  avancerad:{
+    title:'Råd för erfarna hybridlöpare',
+    tips:[
+      'Planera tunga löppass och styrka med minst en dag emellan – benen behöver återhämtning.',
+      'Separera löpspecifik styrka (explosivt, enbens) från tunga basövningar i samma vecka.',
+      'Behåll 70–80 % av löpningen lugn trots att du också lyfter – volymen räknas ihop.',
+      'Schemalägg en lättare vecka ungefär var fjärde vecka, både för löpning och styrka.',
+    ],
+  },
+};
+
 function passDef(key){
   const alias={lugnt:'distans',tavling:'intervaller'}[key]||key;
   return PASS_BIB.find(p=>p.key===alias||p.logKey===key)||PASS_BIB[0];
+}
+function guideForUser(level,focus){
+  if(!level)return null;
+  if(focus==='hybrid')return GUIDE_HYBRID_BY_LEVEL[level]||GUIDE_BY_LEVEL[level];
+  return GUIDE_BY_LEVEL[level];
 }
 function goalCategory(type){
   if(type==='5k')return'short';
@@ -692,7 +775,7 @@ function goalCategory(type){
 }
 function profileReady(){return!!(S.user.level&&S.user.ppw);}
 
-function baseWeeklyMix(level,ppw,goalCat){
+function runningWeeklyMix(level,ppw,goalCat){
   const n=Math.max(2,Math.min(7,ppw||3));
   const mix=[];
   if(level==='nyborjare'){
@@ -717,36 +800,52 @@ function baseWeeklyMix(level,ppw,goalCat){
   return mix.slice(0,n);
 }
 
-function historyInsights(ws,prev){
+function baseWeeklyMix(level,ppw,goalCat,focus){
+  focus=focus||'loping';
+  if(focus!=='hybrid')return runningWeeklyMix(level,ppw,goalCat);
+  const n=Math.max(2,Math.min(7,ppw||3));
+  const strengthSlots=n<=5?1:2;
+  const runSlots=Math.max(1,n-strengthSlots);
+  const runMix=runningWeeklyMix(level,runSlots,goalCat);
+  const strengthMix=strengthSlots===2?['styrka','styrka_lop']:['styrka'];
+  return[...runMix,...strengthMix];
+}
+
+function historyInsights(ws,prev,focus){
+  focus=focus||userFocus();
   const tips=[];
   const doneTypes=new Set(ws.list.filter(w=>w.passtyp).map(w=>w.passtyp));
   const hard=ws.list.filter(w=>['intervaller','tempo','backintervaller','tavling'].includes(w.passtyp));
   const easy=ws.list.filter(w=>['lugnt','distans','aterhamtning','langpass'].includes(w.passtyp));
+  const gym=ws.list.filter(w=>w.type==='gym');
   const r0=avgRpe(ws.list),r1=avgRpe(prev.list);
   if(r0!==null&&r0>=8)tips.push('Hög upplevd ansträngning den här veckan – prioritera återhämtning.');
   if(r0!==null&&r1!==null&&r0>r1+0.8)tips.push('Passen känns tyngre än förra veckan. Ett extra lugnt pass kan hjälpa.');
   if(hard.length>=2&&easy.length===0)tips.push('Flera hårda pass utan lugna emellan – balansera med ett distanspass i bekväm fart.');
+  if(focus==='hybrid'&&gym.length===0&&ws.n>0)tips.push('Inget styrkepass loggat den här veckan – som hybridlöpare behöver du också styrka.');
+  if(focus==='hybrid'&&gym.length>=2&&hard.length>=2)tips.push('Mycket belastning från både styrka och kvalitetslöpning – planera minst en vilodag.');
   if(ws.n===0&&prev.n>=3)tips.push('Inga pass loggade än den här veckan – börja gärna med ett lugnt pass.');
   if(ws.n>=S.user.ppw)tips.push('Du har nått ditt veckomål för antal pass – vila eller håll det lugnt om kroppen känns trött.');
-  return{doneTypes,hardCount:hard.length,tips};
+  return{doneTypes,hardCount:hard.length,gymCount:gym.length,tips};
 }
 
 function getPersonalRecommendations(){
   const u=S.user,g=S.goal,ws=wstats(0),prev=wstats(1);
   const level=u.level,ppw=u.ppw||3;
+  const focus=userFocus();
   const goalCat=g?goalCategory(g.type):'general';
-  const hist=historyInsights(ws,prev);
+  const hist=historyInsights(ws,prev,focus);
 
   if(!level||!ppw){
     return{
       ready:false,
       headline:'Fyll i profil för personliga råd',
-      summary:'Berätta om din erfarenhet och hur många pass du vill träna per vecka – då kan vi föreslå en vecka anpassad efter dig.',
+      summary:'Berätta om din erfarenhet, träningsfokus och hur många pass du vill träna per vecka – då kan vi föreslå en vecka anpassad efter dig.',
       sessions:[],tips:[],
     };
   }
 
-  let mix=baseWeeklyMix(level,ppw,goalCat);
+  let mix=baseWeeklyMix(level,ppw,goalCat,focus);
   if(hist.hardCount>=2)mix=mix.map(t=>(t==='intervaller'||t==='tempo')?'lugnt':t);
   if(hist.doneTypes.has('intervaller'))mix=mix.map(t=>t==='intervaller'?'tempo':t);
   if(hist.doneTypes.has('tempo'))mix=mix.map(t=>t==='tempo'?'lugnt':t);
@@ -756,19 +855,29 @@ function getPersonalRecommendations(){
   const sessions=Object.entries(counts).map(([key,count])=>{
     const def=passDef(key);
     const matchKeys={lugnt:['lugnt','distans'],langpass:['langpass'],tempo:['tempo'],intervaller:['intervaller','tavling']}[key]||[key];
-    const done=ws.list.filter(w=>matchKeys.includes(w.passtyp)).length;
+    const done=def.isStrength?0:ws.list.filter(w=>matchKeys.includes(w.passtyp)).length;
     const remaining=Math.max(0,count-done);
     let reason='';
-    if(goalCat==='long'&&key==='langpass')reason='Ditt mål kräver uthållighet – ett längre lugnt pass bygger det.';
+    if(def.isStrength&&key==='styrka')reason='Basstyrka stödjer löpningen och minskar skaderisk – håll det måttligt.';
+    else if(def.isStrength&&key==='styrka_lop')reason='Löpspecifik styrka förbättrar löpekonomi och stabilitet i benen.';
+    else if(goalCat==='long'&&key==='langpass')reason='Ditt mål kräver uthållighet – ett längre lugnt pass bygger det.';
     else if(key==='intervaller'&&goalCat==='short')reason='Kortare lopp som 5 km gynnas av fart och syreupptag.';
     else if(key==='tempo')reason='Tröskelpass höjer farten du kan hålla under längre tid.';
     else if(key==='lugnt')reason='Det mesta av träningen bör vara lugn – det ger bas och återhämtning.';
     else if(key==='langpass')reason='Ett längre pass i lugn takt stärker uthålligheten.';
     return{key,count,remaining,done,def,reason,doneThisWeek:done>=count};
   }).sort((a,b)=>{
-    const ord={langpass:0,tempo:1,intervaller:2,lugnt:3,tavling:4};
+    const ord={langpass:0,tempo:1,intervaller:2,lugnt:3,styrka:4,styrka_lop:5,tavling:6};
     return(ord[a.key]??9)-(ord[b.key]??9);
   });
+  let gymRemaining=ws.list.filter(w=>w.type==='gym').length;
+  for(const s of sessions){
+    if(!s.def.isStrength)continue;
+    s.done=Math.min(s.count,gymRemaining);
+    gymRemaining-=s.done;
+    s.remaining=Math.max(0,s.count-s.done);
+    s.doneThisWeek=s.done>=s.count;
+  }
 
   const pending=sessions.filter(s=>!s.doneThisWeek);
   const labels=pending.map(s=>{
@@ -786,7 +895,9 @@ function getPersonalRecommendations(){
   }
 
   const goalLabel=g?g.desc:(LEVELS[level]?.label||'din nivå');
-  const headline=`Vecka anpassad för ${goalLabel}`;
+  const headline=focus==='hybrid'
+    ?`Hybridvecka anpassad för ${goalLabel}`
+    :`Vecka anpassad för ${goalLabel}`;
 
   const tips=[...hist.tips];
   if(g&&daysTo(g.tgt)>0&&daysTo(g.tgt)<=21&&level!=='nyborjare'){
@@ -795,8 +906,11 @@ function getPersonalRecommendations(){
   if(level==='nyborjare'&&ppw>=4){
     tips.push('Som nybörjare räcker det ofta med 2–3 pass – fler pass ska fortfarande vara lugna.');
   }
+  if(focus==='hybrid'&&hist.gymCount===0){
+    tips.push('Som hybridlöpare räcker ofta 1–2 styrkepass i veckan – fokus på ben, höfter och core.');
+  }
 
-  return{ready:true,headline,summary,sessions,tips,level,ppw,goalCat,ws};
+  return{ready:true,headline,summary,sessions,tips,level,ppw,goalCat,focus,ws};
 }
 
 function renderRecSession(s,compact){
@@ -806,7 +920,9 @@ function renderRecSession(s,compact){
     ?`<span class="rec-tag rec-tag-done">${ico('check',10)} Loggat</span>`
     :`<span class="rec-tag rec-tag-suggest">${s.remaining>1?s.remaining+'× ':''}Förslag</span>`;
   const logKey=def.logKey||s.key;
-  const logBtn=done?'':`<button onclick="go('log',{prefill:{passtyp:'${logKey}',pz:${def.zone}}})" class="link-btn" style="margin-top:6px;font-size:12px">Logga pass →</button>`;
+  const logBtn=done?'':def.isStrength
+    ?`<button onclick="go('log',{prefill:{type:'${def.logType||'gym'}',name:'${def.label}'}})" class="link-btn" style="margin-top:6px;font-size:12px">Logga pass →</button>`
+    :`<button onclick="go('log',{prefill:{passtyp:'${logKey}',pz:${def.zone||2}}})" class="link-btn" style="margin-top:6px;font-size:12px">Logga pass →</button>`;
   const infoBtn=`<button onclick="go('info',{tab:'pass',pass:'${def.key}'})" class="link-btn" style="margin-top:6px;font-size:12px;margin-left:10px">Läs mer</button>`;
   if(compact){
     return`<div class="rec-session${done?' done':''}" style="padding:12px 14px">
@@ -1087,7 +1203,10 @@ function vDash(){
         <div style="text-align:center;padding:32px 0">
           <div style="margin-bottom:16px;color:var(--text-muted)">${ico('activity',48)}</div>
           <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">Inga pass loggade ännu</p>
-          <button onclick="go('log')" class="btn btn-p" style="padding:10px 22px">Logga ditt första pass</button>
+          <div class="flex gap-2 justify-center flex-wrap">
+            <button onclick="go('log')" class="btn btn-p" style="padding:10px 22px">Logga manuellt</button>
+            <button onclick="go('log')" class="btn btn-s" style="padding:10px 18px;gap:6px">${ico('watch',14)} Importera från klocka</button>
+          </div>
         </div>
       `:recent.map(w=>wRow(w,true)).join('')}
     </div>
@@ -1095,7 +1214,7 @@ function vDash(){
     ${!S.goal&&!S.user.name?`
     <div class="card insight-card p-5 fade-in">
       <div style="font-weight:700;color:var(--text);margin-bottom:6px">Välkommen!</div>
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Börja med att sätta upp din profil (erfarenhet och pass/vecka) och ditt träningsmål för personliga rekommendationer och AI-feedback.</p>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Börja med att sätta upp din profil (träningsfokus, erfarenhet och pass/vecka) och ditt träningsmål för personliga rekommendationer och AI-feedback.</p>
       <div class="flex gap-2 flex-wrap">
         <button onclick="go('prof')" class="btn btn-p" style="padding:9px 18px;font-size:13px;gap:6px">${ico('user',14)} Profil</button>
         <button onclick="go('goal')" class="btn btn-s" style="padding:9px 18px;font-size:13px;gap:6px">${ico('target',14)} Sätt mål</button>
@@ -1128,6 +1247,180 @@ function wRow(w,clickable){
 }
 
 // ──────────────────────────────────────────────
+// WATCH IMPORT (GPX / TCX / FIT)
+// ──────────────────────────────────────────────
+const SPORT_MAP={
+  running:'löpning',run:'löpning',jogging:'löpning',trail:'löpning',track:'löpning',
+  cycling:'cykling',biking:'cykling',bike:'cykling',ride:'cykling',
+  swimming:'simning',swim:'simning',open_water:'simning',
+  walking:'promenad',walk:'promenad',hiking:'promenad',
+  cross_country_skiing:'skidor',skiing:'skidor',nordic_ski:'skidor',
+  fitness_equipment:'gym',strength_training:'gym',training:'gym',workout:'gym',
+};
+function mapSport(s){
+  if(!s)return'löpning';
+  const k=String(s).toLowerCase().replace(/[^a-z0-9_]/g,'_');
+  return SPORT_MAP[k]||'annat';
+}
+function fmtPace(km,durMin){
+  if(!km||!durMin||km<=0)return'';
+  const sec=Math.round((durMin/km)*60),m=Math.floor(sec/60),s=sec%60;
+  return m+':'+(s<10?'0':'')+s;
+}
+function haversineKm(lat1,lon1,lat2,lon2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function zoneMinsFromHr(pts){
+  if(pts.length<2)return{};
+  const z={1:0,2:0,3:0,4:0,5:0};
+  for(let i=1;i<pts.length;i++){
+    if(!pts[i].hr||!pts[i-1].t||!pts[i].t)continue;
+    const dt=(pts[i].t-pts[i-1].t)/60000;
+    if(dt<=0||dt>5)continue;
+    z[zone(pts[i].hr)]+=dt;
+  }
+  const out={};
+  for(let i=1;i<=5;i++)if(z[i]>=1)out['z'+i]=Math.round(z[i]);
+  return out;
+}
+function buildPrefill(data){
+  const pf={
+    name:data.name||'Träningspass',
+    type:mapSport(data.sport),
+    date:data.date||new Date().toISOString().split('T')[0],
+    dur:data.dur?Math.max(1,Math.round(data.dur)):'',
+    km:data.km?Math.round(data.km*100)/100:'',
+    hr:data.hr||'',hrmax:data.hrmax||'',
+    pace:data.pace||fmtPace(data.km,data.dur),
+    cad:data.cad||'',kcal:data.kcal||'',elev:data.elev?Math.round(data.elev):'',
+    source:data.source||'klocka',
+  };
+  Object.assign(pf,zoneMinsFromHr(data.hrPts||[]));
+  return pf;
+}
+function parseGpx(text){
+  const doc=new DOMParser().parseFromString(text,'text/xml');
+  if(doc.querySelector('parsererror'))throw new Error('Ogiltig GPX-fil');
+  const trk=doc.getElementsByTagName('trk')[0];
+  const name=trk?.getElementsByTagName('name')[0]?.textContent?.trim()||doc.getElementsByTagName('name')[0]?.textContent?.trim()||'';
+  const sport=trk?.getElementsByTagName('type')[0]?.textContent||'';
+  const pts=[...doc.getElementsByTagName('trkpt')].map(pt=>{
+    const t=pt.getElementsByTagName('time')[0]?.textContent;
+    const hr=parseInt(pt.getElementsByTagName('hr')[0]?.textContent||0)||null;
+    return{lat:parseFloat(pt.getAttribute('lat')),lon:parseFloat(pt.getAttribute('lon')),t:t?new Date(t).getTime():null,hr};
+  }).filter(p=>p.lat&&p.lon);
+  if(!pts.length)throw new Error('Ingen GPS-data hittades i filen');
+  let km=0;
+  for(let i=1;i<pts.length;i++)km+=haversineKm(pts[i-1].lat,pts[i-1].lon,pts[i].lat,pts[i].lon);
+  const t0=pts.find(p=>p.t)?.t,t1=[...pts].reverse().find(p=>p.t)?.t;
+  const dur=t0&&t1?Math.max(1,Math.round((t1-t0)/60000)):null;
+  const hrs=pts.map(p=>p.hr).filter(Boolean);
+  const hr=hrs.length?Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length):null;
+  const hrmax=hrs.length?Math.max(...hrs):null;
+  const date=(t0?new Date(t0):new Date()).toISOString().split('T')[0];
+  return buildPrefill({name:name||'GPX-pass',sport,date,dur,km,hr,hrmax,hrPts:pts.filter(p=>p.hr&&p.t),source:'GPX-fil'});
+}
+function tcxVal(el,tag){
+  if(!el)return null;
+  const n=el.getElementsByTagName(tag)[0];
+  return n?.textContent?.trim()||null;
+}
+function parseTcx(text){
+  const doc=new DOMParser().parseFromString(text,'text/xml');
+  if(doc.querySelector('parsererror'))throw new Error('Ogiltig TCX-fil');
+  const act=doc.getElementsByTagName('Activity')[0];
+  if(!act)throw new Error('Ingen aktivitet hittades i TCX-filen');
+  const sport=act.getAttribute('Sport')||'';
+  const id=tcxVal(act,'Id');
+  const laps=[...act.getElementsByTagName('Lap')];
+  let dur=0,km=0,kcal=0,hrSum=0,hrN=0,hrmax=0;
+  laps.forEach(lap=>{
+    dur+=parseFloat(tcxVal(lap,'TotalTimeSeconds')||0)/60;
+    km+=parseFloat(tcxVal(lap,'DistanceMeters')||0)/1000;
+    kcal+=parseInt(tcxVal(lap,'Calories')||0)||0;
+    const ahEl=lap.getElementsByTagName('AverageHeartRateBpm')[0];
+    const mhEl=lap.getElementsByTagName('MaximumHeartRateBpm')[0];
+    const ah=parseInt(tcxVal(ahEl,'Value')||tcxVal(lap,'AverageHeartRateBpm')||0);
+    const mh=parseInt(tcxVal(mhEl,'Value')||tcxVal(lap,'MaximumHeartRateBpm')||0);
+    if(ah){hrSum+=ah;hrN++;}
+    if(mh>hrmax)hrmax=mh;
+  });
+  const hrPts=[...act.getElementsByTagName('Trackpoint')].map(tp=>{
+    const t=tcxVal(tp,'Time');
+    const hrEl=tp.getElementsByTagName('HeartRateBpm')[0];
+    const hr=parseInt(tcxVal(hrEl,'Value')||0)||null;
+    return{t:t?new Date(t).getTime():null,hr};
+  }).filter(p=>p.hr&&p.t);
+  const date=(id?new Date(id):new Date()).toISOString().split('T')[0];
+  return buildPrefill({
+    name:(sport||'Träning')+'-pass',sport,date,
+    dur:Math.max(1,Math.round(dur)),km,kcal:kcal||null,
+    hr:hrN?Math.round(hrSum/hrN):null,hrmax:hrmax||null,
+    hrPts,source:'TCX-fil',
+  });
+}
+async function parseFit(buf){
+  const{Decoder,Stream}=await import('https://esm.sh/@garmin/fitsdk@21.158.0');
+  const stream=Stream.fromByteArray(new Uint8Array(buf));
+  const decoder=new Decoder(stream);
+  const{messages,errors}=decoder.read();
+  if(errors?.length)throw new Error('Kunde inte läsa FIT-filen');
+  const s=(messages.sessionMesgs||[])[0];
+  if(!s)throw new Error('Ingen session hittades i FIT-filen');
+  const dur=s.totalTimerTime!=null?s.totalTimerTime/60:(s.totalElapsedTime||0)/60;
+  const km=s.totalDistance!=null?s.totalDistance/1000:null;
+  const fitEpoch=631065600;
+  const startSec=typeof s.startTime==='number'?s.startTime:parseFloat(s.startTime)||0;
+  const date=new Date((startSec+fitEpoch)*1000).toISOString().split('T')[0];
+  return buildPrefill({
+    name:'FIT-pass',sport:s.sport||s.subSport||'',
+    date,dur:Math.max(1,Math.round(dur)),km,
+    hr:s.avgHeartRate||null,hrmax:s.maxHeartRate||null,
+    kcal:s.totalCalories||null,elev:s.totalAscent||null,
+    source:'FIT-fil',
+  });
+}
+async function importWatchFile(file){
+  if(!file)return;
+  const ext=(file.name.split('.').pop()||'').toLowerCase();
+  const drop=document.getElementById('watchdrop');
+  if(drop)drop.classList.add('busy');
+  try{
+    let pf;
+    if(ext==='gpx')pf=parseGpx(await file.text());
+    else if(ext==='tcx')pf=parseTcx(await file.text());
+    else if(ext==='fit')pf=await parseFit(await file.arrayBuffer());
+    else throw new Error('Filformatet stöds inte. Använd GPX, TCX eller FIT.');
+    toast('Data importerad från klockan ✓');
+    go('log',{prefill:pf});
+  }catch(e){
+    toast(e.message||'Import misslyckades','warn');
+  }finally{
+    if(drop)drop.classList.remove('busy');
+  }
+}
+function initWatchImport(){
+  const drop=document.getElementById('watchdrop'),inp=document.getElementById('watchfile');
+  if(!drop||!inp)return;
+  drop.onclick=()=>inp.click();
+  inp.onchange=()=>{if(inp.files[0])importWatchFile(inp.files[0]);inp.value='';};
+  drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag');};
+  drop.ondragleave=()=>drop.classList.remove('drag');
+  drop.ondrop=e=>{
+    e.preventDefault();drop.classList.remove('drag');
+    if(e.dataTransfer.files[0])importWatchFile(e.dataTransfer.files[0]);
+  };
+}
+function importSourceLabel(src){
+  if(!src)return'klockan';
+  if(src.includes('Apple'))return src;
+  if(src.endsWith('-fil'))return src.replace('-fil','');
+  return src;
+}
+
+// ──────────────────────────────────────────────
 // LOG WORKOUT
 // ──────────────────────────────────────────────
 let selZ=2;
@@ -1136,17 +1429,28 @@ function vLog(){
   const pf=VP.prefill||{};
   selZ=parseInt(pf.pz)||2;
   const today=pf.date||new Date().toISOString().split('T')[0];
-  const hasImport=!!pf.name;
-  const hasWatchData=hasImport&&(pf.hr||pf.hrmax||pf.pace||pf.kcal);
+  const hasImport=!!(pf.source||pf.name&&pf.dur);
+  const importLabel=pf.source==='Apple Watch'?'Apple Watch':importSourceLabel(pf.source);
+  const hasWatchData=hasImport&&(pf.hr||pf.hrmax||pf.pace||pf.kcal||pf.km);
   return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
     <div class="flex items-center gap-2 mb-6">
       <button onclick="go('dash')" class="back-btn">←</button>
-      <h1 class="page-title">${hasImport?'Importerat från Apple Watch':'Logga träningspass'}</h1>
+      <h1 class="page-title">${hasImport?'Importerat från '+importLabel:'Logga träningspass'}</h1>
     </div>
 
     ${hasImport?`<div class="card success-banner p-4 mb-4 fade-in">
-      <div class="flex items-center gap-2" style="color:var(--success);font-size:13px;font-weight:600">${ico('watch',14)} Data hämtad från Apple Watch – granska och spara</div>
-    </div>`:''}
+      <div class="flex items-center gap-2" style="color:var(--success);font-size:13px;font-weight:600">${ico('watch',14)} Data hämtad från ${importLabel} – granska och spara</div>
+    </div>`:`<div class="card p-5 mb-4 fade-in" style="border:1px solid var(--accent-border);background:rgba(99,102,241,0.08)">
+      <div class="lbl" style="display:flex;align-items:center;gap:6px;margin-bottom:10px">${ico('watch',12)} Importera från träningsklocka</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6">Dra in en fil från Garmin, Polar, Coros, Suunto m.fl. – eller tryck för att välja. Stödjer <strong style="color:var(--text)">GPX, TCX och FIT</strong>.</p>
+      <div id="watchdrop" class="watch-drop">
+        <div style="color:var(--accent);margin-bottom:8px">${ico('upload',28)}</div>
+        <div style="font-weight:600;color:var(--text);font-size:14px;margin-bottom:4px">Släpp fil här eller tryck för att välja</div>
+        <div style="font-size:12px;color:var(--text-muted)">Exportera passet från Garmin Connect, Polar Flow, Coros m.fl.</div>
+      </div>
+      <input id="watchfile" type="file" accept=".gpx,.tcx,.fit,application/gpx+xml,application/tcx+xml,application/octet-stream" style="display:none">
+      <p style="font-size:12px;color:var(--text-secondary);margin-top:12px;line-height:1.55">Har du <strong style="color:var(--text)">Apple Watch</strong>? Sätt upp automatisk import via Genvägar under <button type="button" onclick="go('prof')" class="link-btn">Profil →</button></p>
+    </div>`}
 
     <form id="wf" onsubmit="doLog(event)" class="space-y-4">
 
@@ -1463,9 +1767,9 @@ function vDet(id){
         ${w.pz?`<span class="font-semibold text-xs px-2.5 py-1 rounded-full ${zcls(w.pz)}">Planerat Z${w.pz}</span>`:''}
       </div>
       <div class="grid grid-cols-3 gap-3">
-        <div class="text-center rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-weight:700;color:var(--text);font-size:15px">${dur(w.dur)}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tid</div></div>
-        <div class="text-center rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-weight:700;color:var(--text);font-size:15px">${w.km?w.km+' km':'-'}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">Distans</div></div>
-        <div class="text-center rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-weight:700;color:var(--text);font-size:15px">${w.rpe?w.rpe+'/10':'-'}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">RPE</div></div>
+        <div class="text-center rounded-xl p-3" style="background:var(--surface-muted)"><div class="metric-num" style="font-size:15px">${dur(w.dur)}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tid</div></div>
+        <div class="text-center rounded-xl p-3" style="background:var(--surface-muted)"><div class="metric-num" style="font-size:15px">${w.km?w.km+' km':'-'}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">Distans</div></div>
+        <div class="text-center rounded-xl p-3" style="background:var(--surface-muted)"><div class="metric-num" style="font-size:15px">${w.rpe?w.rpe+'/10':'-'}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">RPE</div></div>
       </div>
     </div>
 
@@ -1488,12 +1792,12 @@ function vDet(id){
     <div class="card p-5 mb-4 fade-in">
       <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('watch',12)} Klockdata</div>
       <div class="grid grid-cols-2 gap-3 mb-4">
-        ${wd.hr?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Snittpuls</div><div style="font-weight:700;color:var(--text)">${wd.hr} bpm <span class="text-xs font-semibold px-1.5 py-0.5 rounded ${zcls(az)}">Z${az}</span></div></div>`:''}
-        ${wd.hrmax?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Maxpuls</div><div style="font-weight:700;color:var(--text)">${wd.hrmax} bpm</div></div>`:''}
-        ${wd.pace?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Snittempo</div><div style="font-weight:700;color:var(--text)">${wd.pace} min/km</div></div>`:''}
-        ${wd.cad?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Kadens</div><div style="font-weight:700;color:var(--text)">${wd.cad} spm</div></div>`:''}
-        ${wd.kcal?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Kalorier</div><div style="font-weight:700;color:var(--text)">${wd.kcal} kcal</div></div>`:''}
-        ${wd.elev?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Höjdmeter</div><div style="font-weight:700;color:var(--text)">${wd.elev} m</div></div>`:''}
+        ${wd.hr?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Snittpuls</div><div><span class="metric-num">${wd.hr} bpm</span> <span class="text-xs font-semibold px-1.5 py-0.5 rounded ${zcls(az)}">Z${az}</span></div></div>`:''}
+        ${wd.hrmax?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Maxpuls</div><div class="metric-num">${wd.hrmax} bpm</div></div>`:''}
+        ${wd.pace?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Snittempo</div><div class="metric-num">${wd.pace} min/km</div></div>`:''}
+        ${wd.cad?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Kadens</div><div class="metric-num">${wd.cad} spm</div></div>`:''}
+        ${wd.kcal?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Kalorier</div><div class="metric-num">${wd.kcal} kcal</div></div>`:''}
+        ${wd.elev?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Höjdmeter</div><div class="metric-num">${wd.elev} m</div></div>`:''}
       </div>
       ${totalZ>0?`
         <div>
@@ -1606,7 +1910,7 @@ function vGoal(){if(!S.goal)return vGoalForm();
       <div class="flex items-start justify-between mb-3">
         <div>
           <div class="lbl">Ditt mål</div>
-          <div style="font-size:22px;font-weight:700;color:var(--text);line-height:1.25">${g.desc}</div>
+          <div style="font-size:22px;font-weight:700;color:var(--text-heading);line-height:1.25">${g.desc}</div>
         </div>
         <span style="margin-left:14px;flex-shrink:0;color:var(--accent);opacity:0.85">${gicon(g.type,38)}</span>
       </div>
@@ -1619,7 +1923,7 @@ function vGoal(){if(!S.goal)return vGoalForm();
     <div class="grid grid-cols-2 gap-3 mb-4">
       ${[{v:S.workouts.length,u:'Loggade pass totalt'},{v:totKm.toFixed(0)+' km',u:'Total distans'},{v:(totKm/(daysSince/7)).toFixed(1)+' km',u:'Snitt km per vecka'},{v:Math.max(0,Math.ceil(dl/7))+' veckor',u:'Till målet'}].map(({v,u})=>`
         <div class="card p-4 fade-in">
-          <div style="font-size:22px;font-weight:700;color:var(--text)">${v}</div>
+          <div class="metric-num" style="font-size:22px">${v}</div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${u}</div>
         </div>
       `).join('')}
@@ -1727,7 +2031,7 @@ function vPlan(){
 
   return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
     <h1 class="page-title" style="margin-bottom:4px">Personliga rekommendationer</h1>
-    <p class="page-subtitle" style="margin-bottom:20px">Anpassat efter ${LEVELS[u.level]?.label.toLowerCase()||'din nivå'}, ${u.ppw} pass/vecka${S.goal?' och '+S.goal.desc:''}.</p>
+    <p class="page-subtitle" style="margin-bottom:20px">Anpassat efter ${TRAINING_FOCUS[userFocus()]?.label||'din profil'}, ${LEVELS[u.level]?.label.toLowerCase()||'din nivå'}, ${u.ppw} pass/vecka${S.goal?' och '+S.goal.desc:''}.</p>
 
     <div class="card rec-hero p-5 mb-4 fade-in">
       <div class="lbl" style="color:var(--accent)">${ico('star',12)} Veckans fokus</div>
@@ -1769,6 +2073,29 @@ function vPlan(){
 // ──────────────────────────────────────────────
 const INFO_CARDS=[
   {
+    id:'hybrid',icon:'dumbbell',title:'Löpning och styrka – hybridträning',
+    color:'#a78bfa',bg:'rgba(167,139,250,0.08)',
+    intro:'Hybridträning innebär att du kombinerar löpning med styrketräning. Målet är inte att bli som en tyngdlyftare – utan att bli en starkare, mer skadefri löpare.',
+    sections:[
+      {title:'Varför styrka för löpare?',type:'list',items:[
+        'Stärker senor, ligament och muskler som tar stötar vid löpning.',
+        'Förbättrar löpekonomi och hållning, särskilt i slutet av lopp.',
+        'Minskar risken för vanliga löparskador i knä, höft och fotled.',
+      ]},
+      {title:'Hur ofta?',type:'rec',text:'För hybridlöpare räcker oftast 1–2 styrkepass per vecka, utöver löppassen. Totalt antal pass inkluderar både löpning och styrka.'},
+      {title:'Placering i veckan',type:'list',items:[
+        'Undvik tung styrka dagen före intervaller, tröskel eller långpass.',
+        'Basstyrka passar bra på vilodagar eller efter lugna löppass.',
+        'Löpspecifik styrka (enbensövningar, calf raises) kan ligga separat från tunga knäböj.',
+      ]},
+      {title:'Vad ska man träna?',type:'list',items:[
+        'Ben: knäböj, utfall, höftlyft, calf raises.',
+        'Core: plankor, sidoplankan, dead bug.',
+        'Överkropp: lätt till medel – du behöver inte maxa bänkpress.',
+      ]},
+    ],
+  },
+  {
     id:'z2',icon:'heart',title:'Vad är Zon 2?',
     color:'#22d3ee',bg:'rgba(6,182,212,0.08)',
     intro:'Zon 2 är en lågintensiv träningszon där kroppen främst använder fett som bränsle och bygger upp den aeroba uthålligheten.',
@@ -1785,7 +2112,7 @@ const INFO_CARDS=[
         'Ansträngning: 3–4 av 10.',
       ]},
       {title:'Puls',type:'text',text:'Cirka 60–70 % av maxpulsen.'},
-      {title:'Rekommendation',type:'rec',text:'För de flesta löpare bör 70–80 % av all träning ske i zon 2.'},
+      {title:'Rekommendation',type:'rec',text:'För de flesta löpare (även hybrid) bör 70–80 % av löpningen ske i zon 2.'},
     ],
   },
   {
@@ -1840,9 +2167,9 @@ const INFO_CARDS=[
     intro:'Vilan är när kroppen blir starkare. Träningen bryter ner kroppen – återhämtningen bygger upp den igen.',
     sections:[
       {title:'Rekommendationer per nivå',type:'levels',items:[
-        {name:'Nybörjare',desc:'2–3 löppass per vecka. Vila mellan de flesta passen.'},
-        {name:'Motionär',desc:'3–5 pass per vecka. Minst 1–2 vilodagar.'},
-        {name:'Erfaren löpare',desc:'5–7 pass per vecka. Minst en lugn eller helt vilofri dag varje vecka.'},
+        {name:'Nybörjare',desc:'2–3 löppass per vecka. Vila mellan de flesta passen. Hybrid: lägg till 1 kort styrkepass.'},
+        {name:'Motionär',desc:'3–5 pass per vecka. Minst 1–2 vilodagar. Hybrid: 1–2 styrkepass utöver löpningen.'},
+        {name:'Erfaren löpare',desc:'5–7 pass per vecka. Minst en lugn eller helt vilofri dag varje vecka. Hybrid: planera styrka med minst en dag till hårda löppass.'},
       ]},
       {title:'Tecken på att du behöver vila',type:'list',items:[
         'Ovanligt trötta ben.',
@@ -1881,8 +2208,11 @@ function vInfo(){
   const tab=VP.tab||INFO_TAB||'kunskap';
   INFO_TAB=tab;
   const level=S.user.level;
-  const guide=level?GUIDE_BY_LEVEL[level]:null;
+  const focus=userFocus();
+  const guide=guideForUser(level,focus);
   const highlightPass=VP.pass||INFO_OPEN;
+  const runPasses=PASS_BIB.filter(p=>!p.isStrength);
+  const strengthPasses=PASS_BIB.filter(p=>p.isStrength);
 
   const tabs=[
     {id:'guide',lbl:'Träningsguide'},
@@ -1893,39 +2223,49 @@ function vInfo(){
   let body='';
   if(tab==='guide'){
     body=`
-    <p class="page-subtitle" style="margin-bottom:16px">Principer för nybörjare, motionärer och avancerade – utan att låtsas ersätta en personlig tränare.</p>
+    <p class="page-subtitle" style="margin-bottom:16px">Principer för nybörjare, motionärer och avancerade – anpassat efter om du enbart löper eller kombinerar med styrka.</p>
     ${guide?`
     <div class="card rec-hero p-5 mb-4 fade-in">
-      <div class="lbl" style="color:var(--accent)">Din nivå</div>
+      <div class="lbl" style="color:var(--accent)">Din nivå · ${TRAINING_FOCUS[focus]?.label||'Löpning'}</div>
       <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">${guide.title}</div>
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.55">${LEVELS[level].desc}</p>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.55">${LEVELS[level].desc} ${TRAINING_FOCUS[focus]?.desc||''}</p>
       <ul class="info-list info-list-check">${guide.tips.map(t=>`<li><span class="info-check">${ico('check',14,'var(--accent)')}</span>${t}</li>`).join('')}</ul>
     </div>`:`
     <div class="card insight-card p-5 mb-4 fade-in">
-      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:14px">Välj erfarenhetsnivå i profilen så markeras råden som passar dig.</p>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:14px">Välj erfarenhetsnivå och träningsfokus i profilen så markeras råden som passar dig.</p>
       <button onclick="go('prof')" class="btn btn-s" style="padding:9px 16px;font-size:13px;gap:6px">${ico('user',14)} Gå till profil</button>
     </div>`}
-    <div class="lbl">Alla nivåer</div>
-    <div class="space-y-3">
+    <div class="lbl">Löpfokus – alla nivåer</div>
+    <div class="space-y-3 mb-5">
       ${Object.entries(GUIDE_BY_LEVEL).map(([k,g])=>`
-        <div class="card p-5 fade-in${k===level?';border:1px solid var(--accent-border);background:rgba(99,102,241,0.06)':''}">
-          <div style="font-weight:600;color:var(--text);font-size:15px;margin-bottom:4px">${g.title}${k===level?' <span style="font-size:11px;color:var(--accent)">· Din nivå</span>':''}</div>
+        <div class="card p-5 fade-in${k===level&&focus==='loping'?';border:1px solid var(--accent-border);background:rgba(99,102,241,0.06)':''}">
+          <div style="font-weight:600;color:var(--text);font-size:15px;margin-bottom:4px">${g.title}${k===level&&focus==='loping'?' <span style="font-size:11px;color:var(--accent)">· Din nivå</span>':''}</div>
           <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">${LEVELS[k].desc}</p>
+          <ul class="info-list">${g.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+        </div>
+      `).join('')}
+    </div>
+    <div class="lbl">Hybridfokus (löp + styrka)</div>
+    <div class="space-y-3">
+      ${Object.entries(GUIDE_HYBRID_BY_LEVEL).map(([k,g])=>`
+        <div class="card p-5 fade-in${k===level&&focus==='hybrid'?';border:1px solid var(--accent-border);background:rgba(99,102,241,0.06)':''}">
+          <div style="font-weight:600;color:var(--text);font-size:15px;margin-bottom:4px">${g.title}${k===level&&focus==='hybrid'?' <span style="font-size:11px;color:var(--accent)">· Din nivå</span>':''}</div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">${LEVELS[k].desc} ${TRAINING_FOCUS.hybrid.desc}</p>
           <ul class="info-list">${g.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
         </div>
       `).join('')}
     </div>`;
   }else if(tab==='pass'){
     body=`
-    <p class="page-subtitle" style="margin-bottom:8px">Jag tycker absolut att du kan ha en sektion med olika typer av pass.</p>
+    <p class="page-subtitle" style="margin-bottom:8px">Pass-bibliotek för löpning – och styrka om du har hybridfokus.</p>
     <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:16px">Det behöver inte vara ett schema – mer en kunskapsbank.</p>
 
-    <div class="lbl" style="margin-bottom:10px">Exempel</div>
+    <div class="lbl" style="margin-bottom:10px">Löppass</div>
     <div class="card mb-5 fade-in" style="padding:0;overflow:hidden">
       <table class="pass-table">
         <thead><tr><th>Passtyp</th><th>Syfte</th><th>För vem</th></tr></thead>
         <tbody>
-          ${PASS_BIB.map(p=>`
+          ${runPasses.map(p=>`
             <tr class="pass-table-row" onclick="document.getElementById('pass-${p.key}')?.scrollIntoView({behavior:'smooth',block:'center'})">
               <td>${p.label}</td>
               <td>${p.purpose}</td>
@@ -1936,9 +2276,9 @@ function vInfo(){
       </table>
     </div>
 
-    <div class="lbl">Fördjupning</div>
-    <div class="space-y-3">
-      ${PASS_BIB.map(p=>`
+    <div class="lbl">Fördjupning – löpning</div>
+    <div class="space-y-3 mb-5">
+      ${runPasses.map(p=>`
         <div class="pass-card fade-in${highlightPass===p.key||highlightPass===p.logKey?';border-color:var(--accent-border);background:rgba(99,102,241,0.08)':''}" id="pass-${p.key}">
           <div class="flex items-start gap-3">
             <div class="rec-session-icon ${p.zone?' '+zcls(p.zone):''}" style="${!p.zone?'background:var(--surface-muted)':''}">${ico(p.icon,20)}</div>
@@ -1951,16 +2291,54 @@ function vInfo(){
           </div>
         </div>
       `).join('')}
+    </div>
+
+    <div class="lbl" style="margin-bottom:10px">Styrkepass (hybrid)</div>
+    <div class="card mb-5 fade-in" style="padding:0;overflow:hidden">
+      <table class="pass-table">
+        <thead><tr><th>Passtyp</th><th>Syfte</th><th>För vem</th></tr></thead>
+        <tbody>
+          ${strengthPasses.map(p=>`
+            <tr class="pass-table-row" onclick="document.getElementById('pass-${p.key}')?.scrollIntoView({behavior:'smooth',block:'center'})">
+              <td>${p.label}</td>
+              <td>${p.purpose}</td>
+              <td>${p.audience}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="lbl">Fördjupning – styrka</div>
+    <div class="space-y-3">
+      ${strengthPasses.map(p=>`
+        <div class="pass-card fade-in${highlightPass===p.key||highlightPass===p.logKey?';border-color:var(--accent-border);background:rgba(99,102,241,0.08)':''}" id="pass-${p.key}">
+          <div class="flex items-start gap-3">
+            <div class="rec-session-icon" style="background:var(--surface-muted)">${ico(p.icon,20)}</div>
+            <div style="flex:1">
+              <div class="pass-card-title">${p.label}</div>
+              <p class="pass-card-purpose">${p.purpose} · ${p.audience}</p>
+              <p class="pass-card-example"><strong style="color:var(--text-secondary);font-weight:600">Exempel:</strong> ${p.examples}</p>
+              <button onclick="go('log',{prefill:{type:'gym',name:'${p.label}'}})" class="link-btn" style="margin-top:10px;font-size:12px">Logga ${p.label.toLowerCase()} →</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
     </div>`;
   }else{
+    const infoCards=[...INFO_CARDS].sort((a,b)=>{
+      if(isHybrid()&&a.id==='hybrid')return-1;
+      if(isHybrid()&&b.id==='hybrid')return 1;
+      return 0;
+    });
     body=`
-    <p class="page-subtitle" style="margin-bottom:16px">Förstå pulszoner, tröskel och återhämtning – så blir träningsdagboken mer än bara en loggbok.</p>
+    <p class="page-subtitle" style="margin-bottom:16px">Förstå pulszoner, tröskel, styrka och återhämtning – anpassat efter om du enbart löper eller tränar hybrid.</p>
     <div class="space-y-3">
-      ${INFO_CARDS.map((c,i)=>`
-        <div class="info-card card fade-in${INFO_OPEN===c.id?' open':''}" style="border-left:3px solid ${c.color};animation-delay:${i*40}ms">
+      ${infoCards.map((c,i)=>`
+        <div class="info-card card fade-in${INFO_OPEN===c.id?' open':''}${isHybrid()&&c.id==='hybrid'?';border-color:rgba(167,139,250,0.35)':''}" style="border-left:3px solid ${c.color};animation-delay:${i*40}ms">
           <button class="info-card-header" onclick="toggleInfo('${c.id}')">
             <span class="info-icon">${ico(c.icon,24,c.color)}</span>
-            <span class="info-title">${c.title}</span>
+            <span class="info-title">${c.title}${isHybrid()&&c.id==='hybrid'?' <span style="font-size:11px;color:#a78bfa;font-weight:600">· Relevant för dig</span>':''}</span>
             <span class="info-chevron" style="${INFO_OPEN===c.id?'transform:rotate(180deg)':''}">${ico('chev',18)}</span>
           </button>
           <div class="info-card-body${INFO_OPEN===c.id?' open':''}">
@@ -2099,8 +2477,15 @@ function vProf(){
 
       <div class="card p-5">
         <div class="lbl">Träning & rekommendationer</div>
-        <p style="font-size:12px;color:var(--text-secondary);line-height:1.55;margin-bottom:14px">Används för personliga veckoråd – tillsammans med ditt mål och träningshistorik.</p>
+        <p style="font-size:12px;color:var(--text-secondary);line-height:1.55;margin-bottom:14px">Används för personliga veckoråd – tillsammans med ditt mål och träningshistorik. Vid hybrid räknas både löpning och styrka in i pass/vecka.</p>
         <div class="space-y-3">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Träningsfokus</label>
+            <select name="focus" class="inp">
+              ${Object.entries(TRAINING_FOCUS).map(([k,f])=>`<option value="${k}"${(u.focus||'loping')===k?' selected':''}>${f.label}</option>`).join('')}
+            </select>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.5">${TRAINING_FOCUS[u.focus||'loping']?.desc||TRAINING_FOCUS.loping.desc}</p>
+          </div>
           <div>
             <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Erfarenhet</label>
             <select name="level" class="inp">
@@ -2109,7 +2494,7 @@ function vProf(){
             </select>
           </div>
           <div>
-            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Antal pass per vecka</label>
+            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Antal pass per vecka${(u.focus||'loping')==='hybrid'?' (löp + styrka)':''}</label>
             <select name="ppw" class="inp">
               <option value="">Välj antal</option>
               ${[2,3,4,5,6,7].map(n=>`<option value="${n}"${u.ppw===n?' selected':''}>${n} pass / vecka</option>`).join('')}
@@ -2128,27 +2513,41 @@ function vProf(){
     </form>
 
     <div class="card p-5 mt-4 insight-card">
-      <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('watch',12)} Apple Watch – automatisk import</div>
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.65">Skapa en genväg i <strong style="color:var(--text)">Genvägar-appen</strong> på din iPhone som läser ditt senaste träningspass och öppnar appen med all data förfylld.</p>
+      <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('watch',12)} Koppla träningsklocka</div>
 
-      <div class="lbl" style="margin-bottom:10px">Din app-URL (kopiera in i genvägen)</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
-        <code id="appurl" class="code-block" style="flex:1">${location.href.split('?')[0]}</code>
-        <button onclick="navigator.clipboard.writeText(document.getElementById('appurl').textContent).then(()=>toast('URL kopierad!'))" class="btn btn-s" style="flex-shrink:0;padding:7px 10px;font-size:12px">Kopiera</button>
+      <div style="margin-bottom:18px">
+        <div style="font-weight:600;color:var(--text);font-size:13px;margin-bottom:8px">Garmin, Polar, Coros, Suunto m.fl.</div>
+        <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:10px">Exportera ditt pass som <strong style="color:var(--text)">GPX, TCX eller FIT</strong> från klockans app och importera direkt under <button type="button" onclick="go('log')" class="link-btn">Logga pass</button>.</p>
+        <ul style="font-size:12px;color:var(--text-secondary);line-height:1.8;padding-left:18px">
+          <li><strong style="color:var(--text)">Garmin Connect:</strong> Aktivitet → ⋯ → Exportera → GPX eller TCX</li>
+          <li><strong style="color:var(--text)">Polar Flow:</strong> Träning → Exportera → TCX</li>
+          <li><strong style="color:var(--text)">Coros:</strong> Aktivitet → Exportera → FIT eller GPX</li>
+        </ul>
       </div>
 
-      <div class="lbl" style="margin-bottom:10px">Så här skapar du genvägen</div>
-      <ol style="font-size:13px;color:var(--text-secondary);line-height:1.9;padding-left:18px;margin-bottom:14px">
-        <li>Öppna <strong style="color:var(--text)">Genvägar</strong>-appen på iPhone och tryck <strong style="color:var(--text)">+</strong></li>
-        <li>Sök och lägg till <strong style="color:var(--text)">"Hämta träningspass"</strong> – välj <em>Senaste träningen</em></li>
-        <li>Lägg till <strong style="color:var(--text)">"Hämta detaljer om träningspass"</strong> – välj Duration, Distance, Active Energy, Avg Heart Rate, Max Heart Rate, Elevation Ascended</li>
-        <li>Lägg till <strong style="color:var(--text)">"URL"</strong> och bygg URL:en:<br>
-          <code class="code-block" style="display:inline-block;margin-top:4px;line-height:1.8">[din-url]?import=1&name=Träningspass&type=löpning&dur=[Minuter]&km=[Kilometer]&hr=[Snittpuls]&hrmax=[Maxpuls]&kcal=[Kalorier]&elev=[Höjdmeter]&date=[Datum ÅÅÅÅ-MM-DD]</code>
-        </li>
-        <li>Lägg till <strong style="color:var(--text)">"Öppna URL:er"</strong> – välj URL:en från förra steget</li>
-        <li>Namnge genvägen <strong style="color:var(--text)">"Logga träning"</strong> och lägg till på hemskärmen</li>
-      </ol>
-      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6">Efter varje träning på Apple Watch: tryck på genvägen på iPhone → appen öppnas med all data ifylld → tryck Spara.</p>
+      <div style="border-top:1px solid var(--border-light);padding-top:18px">
+        <div style="font-weight:600;color:var(--text);font-size:13px;margin-bottom:8px">Apple Watch – automatisk import</div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.65">Skapa en genväg i <strong style="color:var(--text)">Genvägar-appen</strong> på iPhone som läser ditt senaste träningspass och öppnar appen med all data förfylld.</p>
+
+        <div class="lbl" style="margin-bottom:10px">Din app-URL (kopiera in i genvägen)</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+          <code id="appurl" class="code-block" style="flex:1">${location.href.split('?')[0]}</code>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('appurl').textContent).then(()=>toast('URL kopierad!'))" class="btn btn-s" style="flex-shrink:0;padding:7px 10px;font-size:12px">Kopiera</button>
+        </div>
+
+        <div class="lbl" style="margin-bottom:10px">Så här skapar du genvägen</div>
+        <ol style="font-size:13px;color:var(--text-secondary);line-height:1.9;padding-left:18px;margin-bottom:14px">
+          <li>Öppna <strong style="color:var(--text)">Genvägar</strong>-appen på iPhone och tryck <strong style="color:var(--text)">+</strong></li>
+          <li>Sök och lägg till <strong style="color:var(--text)">"Hämta träningspass"</strong> – välj <em>Senaste träningen</em></li>
+          <li>Lägg till <strong style="color:var(--text)">"Hämta detaljer om träningspass"</strong> – välj Duration, Distance, Active Energy, Avg Heart Rate, Max Heart Rate, Elevation Ascended</li>
+          <li>Lägg till <strong style="color:var(--text)">"URL"</strong> och bygg URL:en:<br>
+            <code class="code-block" style="display:inline-block;margin-top:4px;line-height:1.8">[din-url]?import=1&name=Träningspass&type=löpning&dur=[Minuter]&km=[Kilometer]&hr=[Snittpuls]&hrmax=[Maxpuls]&kcal=[Kalorier]&elev=[Höjdmeter]&date=[Datum ÅÅÅÅ-MM-DD]</code>
+          </li>
+          <li>Lägg till <strong style="color:var(--text)">"Öppna URL:er"</strong> – välj URL:en från förra steget</li>
+          <li>Namnge genvägen <strong style="color:var(--text)">"Logga träning"</strong> och lägg till på hemskärmen</li>
+        </ol>
+        <p style="font-size:12px;color:var(--text-secondary);line-height:1.6">Efter varje träning på Apple Watch: tryck på genvägen på iPhone → appen öppnas med all data ifylld → tryck Spara.</p>
+      </div>
     </div>
 
     <div class="card p-5 mt-4" style="border:1px solid rgba(239,68,68,0.22);background:var(--danger-light)">
@@ -2170,6 +2569,7 @@ function doProf(e){
     age:parseInt(g('age'))||null,
     rhr:parseInt(g('rhr'))||null,
     mhr:parseInt(g('mhr'))||null,
+    focus:g('focus')||'loping',
     level:g('level')||null,
     ppw:parseInt(g('ppw'))||null,
   };
@@ -2204,7 +2604,7 @@ async function runAI(){
     if(btn){btn.disabled=true;btn.textContent='Analyserar…';}
     if(ld)ld.classList.remove('hidden');
     const mhr=MHR();
-    const sys=`Du är en erfaren löparkonsult och personlig tränare. Du ger PERSONLIG, SPECIFIK feedback på svenska baserat på exakt träningsdata.
+    const sys=`Du är en erfaren löparkonsult och personlig tränare. Du ger PERSONLIG, SPECIFIK feedback på svenska baserat på exakt träningsdata. Personen har träningsfokus: ${TRAINING_FOCUS[userFocus()]?.label||'Löpning'} (${TRAINING_FOCUS[userFocus()]?.desc||''}).
 
 PERSONENS PULSZONER (maxpuls ${mhr} bpm):
   Zon 1 (Återhämtning): < ${Math.round(mhr*.60)} bpm
@@ -2232,7 +2632,7 @@ Ge din analys med EXAKT dessa fyra sektioner. Använd EXAKT dessa rubriker på f
 Max 550 ord. Använd INGA emojis. Skriv personligt och uppmuntrande men ärligt.`;
 
     const g=S.goal,u=S.user;
-    const msg=`PROFIL:\nNamn: ${u.name||'–'} | Ålder: ${u.age?u.age+' år':'–'} | Maxpuls: ${mhr} bpm | Vilopuls: ${u.rhr?u.rhr+' bpm':'–'}\n\nMÅL: ${g?`${g.desc} | Datum: ${g.tgt} | Dagar kvar: ${daysTo(g.tgt)} | Veckamål: ${g.wkm||'ej satt'} km/v`:'Inget mål satt'}\n\nTRÄNINGSHISTORIK (${S.workouts.length} pass):\n${workoutCtx()||'(inga pass)'}\n\nGe personlig analys.`;
+    const msg=`PROFIL:\nNamn: ${u.name||'–'} | Ålder: ${u.age?u.age+' år':'–'} | Maxpuls: ${mhr} bpm | Vilopuls: ${u.rhr?u.rhr+' bpm':'–'} | Träningsfokus: ${TRAINING_FOCUS[userFocus()]?.label||'Löpning'}\n\nMÅL: ${g?`${g.desc} | Datum: ${g.tgt} | Dagar kvar: ${daysTo(g.tgt)} | Veckamål: ${g.wkm||'ej satt'} km/v`:'Inget mål satt'}\n\nTRÄNINGSHISTORIK (${S.workouts.length} pass):\n${workoutCtx()||'(inga pass)'}\n\nGe personlig analys.`;
     const res=await claude([{role:'user',content:msg}],sys,2000);
     S.last={text:res,date:new Date().toISOString().split('T')[0],cnt:S.workouts.length};
     save();go('ai');
@@ -2358,6 +2758,9 @@ function doClear(){S.workouts=[];S.last=null;save();closeMod();toast('Alla pass 
 // INIT
 // ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',async function(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
+  }
   await checkAI();
   const p=new URLSearchParams(location.search);
   if(p.get('import')){
@@ -2371,6 +2774,7 @@ document.addEventListener('DOMContentLoaded',async function(){
       z1:p.get('z1')||'',z2:p.get('z2')||'',z3:p.get('z3')||'',
       z4:p.get('z4')||'',z5:p.get('z5')||'',
       rpe:p.get('rpe')||'5',pz:p.get('pz')||'2',
+      source:'Apple Watch',
     };
     history.replaceState(null,'',location.pathname);
     go('log',{prefill:pf});
