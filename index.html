@@ -362,14 +362,25 @@ function loadState(){
 let S=loadState();
 function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
 let AI_SERVER=null;
+let AI_REASON=null;
 async function checkAI(){
-  if(location.protocol==='file:'){AI_SERVER=false;return;}
+  if(location.protocol==='file:'){AI_SERVER=false;AI_REASON='file';return;}
   try{
     const r=await fetch('/api/health');
-    AI_SERVER=r.ok&&!!(await r.json()).ok;
-  }catch(e){AI_SERVER=false;}
+    if(!r.ok){AI_SERVER=false;AI_REASON='no-server';return;}
+    const d=await r.json();
+    if(d.ok){AI_SERVER=true;AI_REASON='ok';}
+    else{AI_SERVER=false;AI_REASON='no-key';}
+  }catch(e){AI_SERVER=false;AI_REASON='no-server';}
 }
 function aiEnabled(){return AI_SERVER===true;}
+function aiStatusMsg(){
+  if(AI_SERVER===true)return '✓ AI är aktiv';
+  if(AI_REASON==='file')return 'Öppna appen via din Netlify-adress, inte som lokal fil.';
+  if(AI_REASON==='no-key')return 'Servern saknar API-nyckel. Lägg till ANTHROPIC_API_KEY i Netlify och deploya om.';
+  if(AI_REASON==='no-server')return 'AI fungerar bara på Netlify-adressen, inte GitHub Pages eller lokal fil.';
+  return 'Kontrollerar AI-status…';
+}
 
 // ──────────────────────────────────────────────
 // ROUTING
@@ -383,6 +394,7 @@ const NAVS=[
   {id:'log',icon:'plus',lbl:'Logga'},
   {id:'hist',icon:'chart',lbl:'Historik'},
   {id:'goal',icon:'target',lbl:'Mål'},
+  {id:'plan',icon:'calendar',lbl:'Veckoplan'},
   {id:'ai',icon:'bot',lbl:'AI Analys'},
   {id:'prof',icon:'user',lbl:'Profil'},
 ];
@@ -401,7 +413,7 @@ function renderNav(){
 
 function render(){
   renderNav();
-  const fns={dash:vDash,log:vLog,det:()=>vDet(VP.id),edit:()=>vEdit(VP.id),hist:vHist,goal:vGoal,ai:vAI,prof:vProf};
+  const fns={dash:vDash,log:vLog,det:()=>vDet(VP.id),edit:()=>vEdit(VP.id),hist:vHist,goal:vGoal,plan:vPlan,ai:vAI,prof:vProf};
   document.getElementById('content').innerHTML=(fns[V]||vDash)();
   setTimeout(initCharts,60);
 }
@@ -1168,6 +1180,48 @@ function doGoal(e){
 }
 
 // ──────────────────────────────────────────────
+// WEEKLY PLAN
+// ──────────────────────────────────────────────
+const VECKOPLAN=[
+  {day:'Måndag',act:'Vila'},
+  {day:'Tisdag',act:'Intervaller',z:5},
+  {day:'Onsdag',act:'Lugn distans',z:2},
+  {day:'Torsdag',act:'Tröskel',z:4},
+  {day:'Fredag',act:'Vila'},
+  {day:'Lördag',act:'Långpass',z:2},
+  {day:'Söndag',act:'Återhämtning',z:1},
+];
+
+function vPlan(){
+  const todayIdx=(new Date().getDay()+6)%7;
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <h1 class="page-title" style="margin-bottom:4px">Veckoplan</h1>
+    <p class="page-subtitle" style="margin-bottom:20px">Ett balanserat exempel på hur en träningsvecka kan se ut.</p>
+
+    <div class="card overflow-hidden mb-4 fade-in" style="padding:0">
+      ${VECKOPLAN.map((p,i)=>{
+        const isToday=i===todayIdx;
+        return `
+        <div class="flex items-center gap-3 row-hover transition-colors" style="padding:16px 18px;${i<VECKOPLAN.length-1?'border-bottom:1px solid var(--border-light)':''}${isToday?';background:rgba(99,102,241,0.1)':''}">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${p.z?' '+zcls(p.z):''}" style="${!p.z?'background:var(--surface-muted);color:var(--text-muted)':''};font-size:13px;font-weight:700">
+            ${p.z?'Z'+p.z:ico('calendar',16)}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div style="font-weight:600;color:var(--text);font-size:14px">${p.day}${isToday?' <span style="font-size:11px;font-weight:600;color:var(--accent)">· Idag</span>':''}</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">${p.act}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="card insight-card p-5 fade-in">
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">Detta är ett exempel. Anpassa efter din nivå och återhämtning.</p>
+    </div>
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+// ──────────────────────────────────────────────
 // AI ANALYSIS
 // ──────────────────────────────────────────────
 function vAI(){
@@ -1182,7 +1236,7 @@ function vAI(){
       <div class="flex gap-3"><span style="font-size:24px">⚠️</span>
         <div>
           <div style="font-weight:600;color:var(--warning);margin-bottom:4px">AI inte tillgänglig här</div>
-          <p style="font-size:13px;color:#d97706;margin-bottom:0;line-height:1.55">${location.protocol==='file:'?'Öppna appen via din publicerade webbadress (inte som lokal fil).':'AI-servern är inte konfigurerad ännu.'}</p>
+          <p style="font-size:13px;color:#d97706;margin-bottom:0;line-height:1.55">${AI_REASON==='file'?'Öppna appen via din Netlify-adress (inte som lokal fil).':AI_REASON==='no-key'?'Lägg till ANTHROPIC_API_KEY i Netlify och deploya om.':AI_REASON==='no-server'?'AI fungerar bara på Netlify-adressen.':aiStatusMsg()}</p>
         </div>
       </div>
     </div>
@@ -1277,7 +1331,7 @@ function vProf(){
       <div class="card p-5">
         <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('bot',12)} AI</div>
         <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:0">AI-analys körs via servern. Du behöver inte lägga in någon API-nyckel i appen – nyckeln ligger säkert på servern.</p>
-        ${AI_SERVER===true?`<div style="font-size:12px;color:var(--success);margin-top:10px;font-weight:600">✓ AI är aktiv</div>`:AI_SERVER===false?`<div style="font-size:12px;color:var(--warning);margin-top:10px;font-weight:600">AI är inte tillgänglig på den här adressen</div>`:''}
+        ${AI_SERVER===true?`<div style="font-size:12px;color:var(--success);margin-top:10px;font-weight:600">${aiStatusMsg()}</div>`:AI_SERVER===false?`<div style="font-size:12px;color:var(--warning);margin-top:10px;font-weight:600;line-height:1.5">${aiStatusMsg()}</div>`:''}
       </div>
 
       <button type="submit" class="btn btn-p w-full" style="padding:15px;font-size:15px;gap:8px">${ico('save',16)} Spara inställningar</button>
