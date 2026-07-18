@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Träningsdagbok AI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']}}}}</script>
+<style>
+:root{
+  --bg:#0f1220;
+  --surface:rgba(255,255,255,0.06);
+  --surface-muted:rgba(255,255,255,0.04);
+  --border:rgba(255,255,255,0.1);
+  --border-light:rgba(255,255,255,0.06);
+  --text:#f1f5f9;
+  --text-secondary:#94a3b8;
+  --text-muted:#64748b;
+  --accent:#818cf8;
+  --accent-hover:#6366f1;
+  --accent-light:rgba(99,102,241,0.15);
+  --accent-border:rgba(99,102,241,0.3);
+  --accent-glow:rgba(99,102,241,0.35);
+  --success:#34d399;
+  --success-light:rgba(16,185,129,0.12);
+  --warning:#fbbf24;
+  --warning-light:rgba(245,158,11,0.1);
+  --danger:#f87171;
+  --danger-light:rgba(239,68,68,0.1);
+  --shadow:0 4px 24px rgba(0,0,0,0.25);
+  --shadow-md:0 8px 32px rgba(0,0,0,0.35);
+  --radius:12px;
+  --radius-lg:16px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 55% at 85% -5%, rgba(99,102,241,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at -5% 85%, rgba(139,92,246,0.16) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 35% at 50% 50%, rgba(59,130,246,0.08) 0%, transparent 70%);
+  pointer-events:none;
+  z-index:0;
+}
+
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    linear-gradient(180deg, rgba(15,18,32,0.42) 0%, rgba(15,18,32,0.78) 55%, rgba(15,18,32,0.92) 100%),
+    url('hero-bg.png') center 20% / cover no-repeat;
+  pointer-events:none;
+  z-index:0;
+}
+
+#app-root{position:relative;z-index:1}
+
+/* Cards */
+.card{
+  background:var(--surface);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow);
+}
+
+.fade-in{animation:fadeIn .25s ease forwards}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.spin{animation:spin .85s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:600;border-radius:10px;cursor:pointer;
+  transition:background .15s,border-color .15s,box-shadow .15s;
+  border:none;font-family:inherit;font-size:14px;
+}
+
+.btn-p{
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;
+  box-shadow:0 4px 16px var(--accent-glow);
+}
+.btn-p:hover:not(:disabled){
+  background:linear-gradient(135deg,#4f46e5,#7c3aed);
+  box-shadow:0 6px 24px rgba(99,102,241,0.45);
+}
+.btn-p:disabled{opacity:.45;cursor:not-allowed}
+
+.btn-s{
+  background:rgba(99,102,241,0.1);
+  color:var(--accent);
+  border:1px solid var(--accent-border);
+}
+.btn-s:hover{background:rgba(99,102,241,0.18);border-color:rgba(99,102,241,0.45)}
+
+.back-btn{
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  border-radius:10px;border:1px solid var(--border);
+  background:rgba(255,255,255,0.05);cursor:pointer;
+  color:var(--text-secondary);font-size:18px;transition:background .15s;
+}
+.back-btn:hover{background:rgba(255,255,255,0.1)}
+
+.link-btn{
+  font-size:12px;font-weight:600;color:var(--accent);
+  border:none;background:transparent;cursor:pointer;padding:0;
+}
+.link-btn:hover{color:#a5b4fc}
+
+/* Inputs */
+.inp{
+  width:100%;padding:10px 12px;
+  border:1px solid rgba(255,255,255,0.12);border-radius:10px;font-size:14px;
+  font-family:inherit;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  background:rgba(255,255,255,0.06);color:var(--text);
+}
+.inp:focus{
+  border-color:rgba(99,102,241,0.55);
+  box-shadow:0 0 0 3px rgba(99,102,241,0.15);
+}
+.inp::placeholder{color:rgba(255,255,255,0.28)}
+select.inp{
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23818cf8'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:36px;
+}
+select.inp option{background:#1e1b4b;color:var(--text)}
+textarea.inp{resize:vertical;min-height:80px}
+
+/* Sidebar */
+.sidebar{
+  background:rgba(15,20,40,0.72);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-right:1px solid rgba(255,255,255,0.1);
+}
+.sidebar-logo{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;box-shadow:0 4px 14px var(--accent-glow);
+  display:flex;align-items:center;justify-content:center;
+}
+.sidebar-footer{
+  border-top:1px solid var(--border-light);
+  padding-top:12px;margin-top:12px;
+  font-size:11px;color:var(--text-muted);text-align:center;
+}
+
+.nav-btn{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:9px 12px;border-radius:8px;font-size:14px;
+  font-weight:500;cursor:pointer;border:none;
+  background:transparent;font-family:inherit;
+  transition:background .15s,color .15s;
+  color:var(--text-secondary);text-align:left;
+}
+.nav-btn:hover{background:rgba(255,255,255,0.05);color:var(--text-secondary)}
+.nav-btn.act{
+  background:var(--accent-light);
+  color:var(--accent);font-weight:600;
+  box-shadow:inset 2px 0 0 #6366f1;
+}
+
+.bottom-nav{
+  background:rgba(15,20,40,0.78);
+  backdrop-filter:blur(20px);
+  border-top:1px solid rgba(255,255,255,0.1);
+  padding:4px 0;
+}
+.bnav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px;border:none;background:transparent;cursor:pointer;
+  color:var(--text-muted);font-family:inherit;
+}
+.bnav-btn.act{color:var(--accent)}
+
+/* Progress bar */
+.pbar{height:6px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden}
+.pfill{height:100%;border-radius:99px;transition:width .5s ease;background:linear-gradient(90deg,#6366f1,#8b5cf6)}
+
+/* Zone badges */
+.z1{background:rgba(16,185,129,0.14);color:#34d399;border:1px solid rgba(16,185,129,0.3)}
+.z2{background:rgba(6,182,212,0.14);color:#22d3ee;border:1px solid rgba(6,182,212,0.3)}
+.z3{background:rgba(245,158,11,0.14);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)}
+.z4{background:rgba(249,115,22,0.14);color:#fb923c;border:1px solid rgba(249,115,22,0.3)}
+.z5{background:rgba(239,68,68,0.14);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+
+/* Zone selector */
+.zone-opt{
+  flex:1;text-align:center;padding:8px 3px;border-radius:8px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);
+  background:rgba(255,255,255,0.04);transition:all .15s;user-select:none;line-height:1.3;
+}
+.zone-opt:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.65)}
+.sel-z1{border-color:#10b981;background:rgba(16,185,129,0.16);color:#34d399}
+.sel-z2{border-color:#06b6d4;background:rgba(6,182,212,0.16);color:#22d3ee}
+.sel-z3{border-color:#f59e0b;background:rgba(245,158,11,0.16);color:#fbbf24}
+.sel-z4{border-color:#f97316;background:rgba(249,115,22,0.16);color:#fb923c}
+.sel-z5{border-color:#ef4444;background:rgba(239,68,68,0.16);color:#f87171}
+
+/* Toast */
+#toast{transition:opacity .25s ease}
+.toast-inner{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:10px;
+  background:rgba(30,27,75,0.95);border:1px solid var(--accent-border);
+  backdrop-filter:blur(20px);box-shadow:var(--shadow-md);font-size:14px;color:var(--text);
+}
+
+/* Modal */
+.modal-bg{
+  background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);
+  align-items:flex-end;justify-content:center;padding:16px;
+}
+.modal-box{
+  width:100%;max-width:24rem;border-radius:var(--radius-lg);padding:24px;
+  background:rgba(15,15,40,0.96);border:1px solid rgba(255,255,255,0.1);box-shadow:var(--shadow-md);
+}
+
+#content{position:relative;z-index:1}
+
+/* Scrollbar */
+#content::-webkit-scrollbar{width:4px}
+#content::-webkit-scrollbar-thumb{background:rgba(99,102,241,0.45);border-radius:2px}
+
+/* Stat cards */
+.stat-card{background:linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.06))}
+.stat-value{font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.stat-label{font-size:11px;color:var(--text-secondary);margin-top:4px}
+
+/* Labels & helpers */
+.lbl{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:12px}
+.field-label{display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px}
+.page-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.page-subtitle{font-size:13px;color:var(--text-secondary)}
+.surface-muted{background:rgba(255,255,255,0.05);border-radius:10px}
+.row-divider{border-bottom:1px solid var(--border-light)}
+.row-hover:hover{background:rgba(255,255,255,0.05)}
+.insight-card{border-left:3px solid #6366f1;background:rgba(99,102,241,0.08)}
+.alert-card{background:var(--warning-light);border:1px solid rgba(245,158,11,0.28)}
+.success-banner{background:var(--success-light);border:1px solid rgba(16,185,129,0.28)}
+.goal-hero{
+  background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.1));
+  border:1px solid var(--accent-border);
+}
+.goal-hero-inner{
+  background:rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;
+  font-size:13px;color:#c7d2fe;
+}
+.code-block{
+  font-size:11px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;padding:8px 10px;color:var(--accent);word-break:break-all;
+  font-family:ui-monospace,monospace;
+}
+.divider{border:none;border-top:1px solid var(--border-light);margin:16px 0}
+
+/* Dashboard hero */
+.dash-page{min-height:100%}
+.dash-hero{
+  padding:1.5rem 1rem 2rem;
+  position:relative;
+}
+@media (min-width:768px){
+  .dash-hero{padding:2.5rem 2rem 2.75rem;min-height:280px}
+}
+.dash-hero-inner{max-width:680px;margin:0 auto;position:relative;z-index:1}
+.dash-hero .hero-date{color:rgba(199,210,254,0.7);font-size:12px}
+.dash-hero .hero-title{
+  color:#fff;font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:6px;
+  text-shadow:0 2px 20px rgba(49,46,129,0.8);
+}
+.dash-hero .stat-card{
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.14);
+  box-shadow:0 8px 32px rgba(49,46,129,0.25);
+}
+.dash-hero .stat-value{
+  background:linear-gradient(135deg,#c7d2fe,#e9d5ff);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.dash-hero .stat-label{color:rgba(199,210,254,0.75)}
+.dash-body{padding:0 1rem 1.5rem}
+@media (min-width:768px){.dash-body{padding:0 2rem 2rem}}
+.dash-body-inner{max-width:680px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<div id="app-root" class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar desktop -->
+  <aside class="sidebar hidden md:flex flex-col w-56 flex-shrink-0 p-4">
+    <div class="flex items-center gap-2.5 mb-8 px-1">
+      <div class="sidebar-logo"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div>
+        <div class="font-semibold text-sm" style="color:var(--text)">Träningsdagbok</div>
+        <div style="font-size:11px;color:var(--text-muted)">AI-tränarcoach</div>
+      </div>
+    </div>
+    <div id="snav" class="space-y-0.5 flex-1"></div>
+    <div class="sidebar-footer">Powered by Claude AI</div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <div id="content" class="flex-1 overflow-y-auto"></div>
+    <nav class="bottom-nav md:hidden">
+      <div id="bnav" class="flex justify-around items-center"></div>
+    </nav>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed top-4 right-4 z-50 pointer-events-none" style="opacity:0">
+  <div class="toast-inner">
+    <span id="ti">✓</span><span id="tm"></span>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="mbg" class="modal-bg fixed inset-0 z-40 hidden" onclick="closeMod(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div id="mc"></div>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────
+const SK = 'tdbok-v4';
+function fresh(){return{user:{name:'',age:null,rhr:null,mhr:null,key:''},goal:null,workouts:[],last:null};}
+let S=(function(){try{return Object.assign(fresh(),JSON.parse(localStorage.getItem(SK)||'{}'));}catch(e){return fresh();}})();
+function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
+
+// ──────────────────────────────────────────────
+// ROUTING
+// ──────────────────────────────────────────────
+let V='dash',VP={},CX={};
+
+function go(v,p){V=v;VP=p||{};killCharts();render();document.getElementById('content').scrollTop=0;}
+
+const NAVS=[
+  {id:'dash',icon:'home',lbl:'Hem'},
+  {id:'log',icon:'plus',lbl:'Logga'},
+  {id:'hist',icon:'chart',lbl:'Historik'},
+  {id:'goal',icon:'target',lbl:'Mål'},
+  {id:'ai',icon:'bot',lbl:'AI Analys'},
+  {id:'prof',icon:'user',lbl:'Profil'},
+];
+
+function renderNav(){
+  document.getElementById('snav').innerHTML=NAVS.map(n=>
+    `<button class="nav-btn${V===n.id?' act':''}" onclick="go('${n.id}')">${ico(n.icon,17)}<span style="margin-left:2px">${n.lbl}</span></button>`
+  ).join('');
+  document.getElementById('bnav').innerHTML=NAVS.map(n=>
+    `<button onclick="go('${n.id}')" class="bnav-btn${V===n.id?' act':''}">
+      ${ico(n.icon,21)}
+      <span style="font-size:9px;font-weight:600;font-family:inherit;line-height:1.3">${n.lbl}</span>
+    </button>`
+  ).join('');
+}
+
+function render(){
+  renderNav();
+  const fns={dash:vDash,log:vLog,det:()=>vDet(VP.id),edit:()=>vEdit(VP.id),hist:vHist,goal:vGoal,ai:vAI,prof:vProf};
+  document.getElementById('content').innerHTML=(fns[V]||vDash)();
+  setTimeout(initCharts,60);
+}
+
+// ──────────────────────────────────────────────
+// UTILS
+// ──────────────────────────────────────────────
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function dur(m){if(!m)return '-';const h=Math.floor(m/60),mn=m%60;return h?`${h}h${mn>0?' '+mn+'min':''}`:`${mn} min`;}
+function fdate(s,short){if(!s)return '-';const d=new Date(s+'T12:00:00');if(short)return d.toLocaleDateString('sv-SE',{day:'numeric',month:'short'});return d.toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long'});}
+function daysTo(s){const a=new Date();a.setHours(0,0,0,0);const b=new Date(s);b.setHours(0,0,0,0);return Math.ceil((b-a)/864e5);}
+function MHR(){return S.user.mhr||(S.user.age?220-S.user.age:190);}
+function zone(hr){const m=MHR(),p=(hr/m)*100;if(p<60)return 1;if(p<70)return 2;if(p<80)return 3;if(p<90)return 4;return 5;}
+function zcls(z){return['','z1','z2','z3','z4','z5'][z]||'';}
+function zcol(z){return['','#10b981','#06b6d4','#f59e0b','#f97316','#ef4444'][z]||'#6b7280';}
+function ico(name,sz=18){
+  const d={
+    home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+    plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+    target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    bot:'<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><circle cx="8" cy="16" r="1" fill="currentColor"/><circle cx="16" cy="16" r="1" fill="currentColor"/>',
+    user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    run:'<circle cx="13" cy="4" r="2"/><path d="M10 7.5 8 20"/><path d="m14.5 9-2 5-4 3"/><path d="M16.5 12h-5"/>',
+    bike:'<circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/>',
+    swim:'<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
+    dumbbell:'<path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/>',
+    walk:'<circle cx="12" cy="4" r="2"/><path d="M10 7.5c-1 .667-1.667 1.5-2 2.5l-2 6"/><path d="m14 7.5 1.5 7.5-3.5-2-2 4"/><path d="M8 20h2m6-3h2"/>',
+    ski:'<circle cx="7" cy="6" r="2"/><path d="m9 8 5 5 1 4"/><path d="m4 18 4-1 5 1h5a2 2 0 0 0 0-4h-3"/><path d="m15 8-3 5"/>',
+    zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    medal:'<circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>',
+    trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>',
+    flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+    star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
+    pencil:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+    calendar:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    watch:'<circle cx="12" cy="12" r="7"/><polyline points="12 9 12 12 13.5 13.5"/><path d="m16.51 17.35-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"/>',
+    alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',
+    activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  };
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0">${d[name]||d.zap}</svg>`;
+}
+function ticon(t,sz=22){return ico({löpning:'run',cykling:'bike',simning:'swim',gym:'dumbbell',promenad:'walk',skidor:'ski',annat:'zap'}[t]||'zap',sz);}
+function gicon(t,sz=36){return ico({maraton:'medal',halvmaraton:'trophy','10k':'flag','5k':'flag',cykling:'bike',anpassad:'star'}[t]||'target',sz);}
+const PASSTYPER=[
+  {v:'lugnt',l:'Lugnt / Återhämtning'},
+  {v:'langpass',l:'Långpass'},
+  {v:'tempo',l:'Tempo / Tröskel'},
+  {v:'intervaller',l:'Intervaller'},
+  {v:'tavling',l:'Tävling'},
+];
+function pLabel(p){return PASSTYPER.find(x=>x.v===p)?.l||'';}
+function passtypOpts(sel){
+  return PASSTYPER.map(p=>`<option value="${p.v}"${sel===p.v?' selected':''}>${p.l}</option>`).join('');
+}
+
+function wstats(ago){
+  ago=ago||0;const now=new Date();const mon=new Date(now);
+  mon.setDate(now.getDate()-((now.getDay()||7)-1)-(ago*7));mon.setHours(0,0,0,0);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59,999);
+  const ws=S.workouts.filter(w=>{const d=new Date(w.date+'T12:00:00');return d>=mon&&d<=sun;});
+  return{n:ws.length,km:ws.reduce((s,w)=>s+(w.km||0),0),min:ws.reduce((s,w)=>s+(w.dur||0),0),list:ws};
+}
+
+// ──────────────────────────────────────────────
+// DASHBOARD
+// ──────────────────────────────────────────────
+function vDash(){
+  const h=new Date().getHours();
+  const gr=h<5?'God natt':h<12?'God morgon':h<18?'Hej':h<22?'God kväll':'God natt';
+  const nm=S.user.name?S.user.name.split(' ')[0]:'där';
+  const ws=wstats(0);
+  const recent=[...S.workouts].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,4);
+
+  let goalHtml='';
+  if(S.goal){
+    const dl=daysTo(S.goal.tgt);
+    goalHtml=`
+    <div class="card p-5 fade-in">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <div class="lbl">Aktuellt mål</div>
+          <div style="font-size:17px;font-weight:700;color:var(--text);line-height:1.3">${S.goal.desc}</div>
+        </div>
+        <span style="margin-left:12px;color:var(--accent);opacity:0.85">${gicon(S.goal.type,34)}</span>
+      </div>
+      <div class="flex items-center gap-1.5" style="font-size:13px;color:var(--text-secondary);margin-top:4px">
+        ${ico('calendar',14)}
+        <span>${dl>0?`${dl} dagar kvar (${Math.ceil(dl/7)} veckor)`:dl===0?'Idag!':'Målet har passerat'}</span>
+      </div>
+      ${S.goal.wkm?`
+        <div style="margin-top:14px">
+          <div class="flex justify-between" style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">
+            <span>Veckans km</span>
+            <span style="font-weight:600;color:var(--text)">${ws.km.toFixed(1)} / ${S.goal.wkm} km</span>
+          </div>
+          <div class="pbar"><div class="pfill" style="width:${Math.min(100,ws.km/S.goal.wkm*100).toFixed(0)}%"></div></div>
+        </div>
+      `:''}
+    </div>`;
+  }
+
+  let insHtml='';
+  if(S.last){
+    const prev=S.last.text.replace(/[#*\[\]]/g,'').replace(/\n+/g,' ').trim().slice(0,230);
+    insHtml=`
+    <div class="card insight-card p-5 fade-in">
+      <div class="flex items-center gap-2 mb-2">
+        <span style="color:var(--accent)">${ico('bot',14)}</span>
+        <span style="font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.04em;text-transform:uppercase">Senaste AI-insikt</span>
+        <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${fdate(S.last.date,true)}</span>
+      </div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">${prev}…</p>
+      <button onclick="go('ai')" class="link-btn" style="margin-top:8px">Visa full analys →</button>
+    </div>`;
+  }
+
+  return `<div class="dash-page">
+    <div class="dash-hero">
+      <div class="dash-hero-inner">
+        <div class="hero-date">${new Date().toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+        <h1 class="hero-title">${gr}, ${nm}!</h1>
+        <div class="grid grid-cols-3 gap-3" style="margin-top:1.5rem">
+          <div class="card stat-card p-4 text-center fade-in">
+            <div class="stat-value">${ws.n}</div>
+            <div class="stat-label">Pass i veckan</div>
+          </div>
+          <div class="card stat-card p-4 text-center fade-in">
+            <div class="stat-value">${ws.km.toFixed(1)}</div>
+            <div class="stat-label">Km i veckan</div>
+          </div>
+          <div class="card stat-card p-4 text-center fade-in">
+            <div class="stat-value">${Math.round(ws.min/60)}h</div>
+            <div class="stat-label">Tid i veckan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-body">
+      <div class="dash-body-inner space-y-4">
+
+    ${goalHtml}
+    ${insHtml}
+
+    <div class="card p-5 fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <div style="font-weight:600;color:var(--text)">Senaste passen</div>
+        <button onclick="go('hist')" class="link-btn">Visa alla →</button>
+      </div>
+      ${recent.length===0?`
+        <div style="text-align:center;padding:32px 0">
+          <div style="margin-bottom:16px;color:var(--text-muted)">${ico('activity',48)}</div>
+          <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">Inga pass loggade ännu</p>
+          <button onclick="go('log')" class="btn btn-p" style="padding:10px 22px">Logga ditt första pass</button>
+        </div>
+      `:recent.map(w=>wRow(w,true)).join('')}
+    </div>
+
+    ${!S.goal&&!S.user.name?`
+    <div class="card insight-card p-5 fade-in">
+      <div style="font-weight:700;color:var(--text);margin-bottom:6px">Välkommen!</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Börja med att sätta upp din profil och ditt träningsmål för att få personlig AI-feedback.</p>
+      <div class="flex gap-2 flex-wrap">
+        <button onclick="go('prof')" class="btn btn-p" style="padding:9px 18px;font-size:13px;gap:6px">${ico('user',14)} Profil</button>
+        <button onclick="go('goal')" class="btn btn-s" style="padding:9px 18px;font-size:13px;gap:6px">${ico('target',14)} Sätt mål</button>
+      </div>
+    </div>
+    `:''}
+    <div style="height:20px"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function wRow(w,clickable){
+  const wd=w.wd||{};
+  const az=wd.hr?zone(wd.hr):null;
+  const disc=w.pz&&az&&az>w.pz+1;
+  const clickAttr=clickable?`onclick="go('det',{id:'${w.id}'})" style="cursor:pointer"`:'';
+  return `
+  <div ${clickAttr} class="flex items-center gap-3 py-3 px-1 ${clickable?'-mx-1 px-2 rounded-xl row-hover transition-colors':''} row-divider">
+    <div class="w-10 h-10 rounded-xl ${w.pz?zcls(w.pz):''} flex items-center justify-center flex-shrink-0" style="${!w.pz?'background:var(--surface-muted)':''}font-size:18px">${ticon(w.type)}</div>
+    <div class="flex-1 min-w-0">
+      <div style="font-weight:600;color:var(--text);font-size:14px" class="truncate">${w.name||w.type}</div>
+      <div style="font-size:12px;color:var(--text-secondary)">${fdate(w.date,true)} · ${dur(w.dur)}${w.km?' · '+w.km+'km':''}${w.passtyp?' · '+pLabel(w.passtyp):''}</div>
+    </div>
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      ${wd.hr?`<span class="text-xs font-semibold px-2 py-0.5 rounded-lg ${zcls(az)}">♥ ${wd.hr}${disc?` ${ico('alert',11)}`:''}</span>`:''}
+      ${clickable?`<span style="color:var(--text-muted);font-size:16px">›</span>`:''}
+    </div>
+  </div>`;
+}
+
+// ──────────────────────────────────────────────
+// LOG WORKOUT
+// ──────────────────────────────────────────────
+let selZ=2;
+
+function vLog(){
+  const pf=VP.prefill||{};
+  selZ=parseInt(pf.pz)||2;
+  const today=pf.date||new Date().toISOString().split('T')[0];
+  const hasImport=!!pf.name;
+  const hasWatchData=hasImport&&(pf.hr||pf.hrmax||pf.pace||pf.kcal);
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <div class="flex items-center gap-2 mb-6">
+      <button onclick="go('dash')" class="back-btn">←</button>
+      <h1 class="page-title">${hasImport?'Importerat från Apple Watch':'Logga träningspass'}</h1>
+    </div>
+
+    ${hasImport?`<div class="card success-banner p-4 mb-4 fade-in">
+      <div class="flex items-center gap-2" style="color:var(--success);font-size:13px;font-weight:600">${ico('watch',14)} Data hämtad från Apple Watch – granska och spara</div>
+    </div>`:''}
+
+    <form id="wf" onsubmit="doLog(event)" class="space-y-4">
+
+      <div class="card p-5">
+        <div class="lbl">Grundinfo</div>
+        <div class="space-y-3">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Passnamn *</label>
+            <input name="name" type="text" class="inp" value="${pf.name||''}" placeholder="t.ex. Morgonlöpning, Intervaller, Tempopass" required>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Träningstyp</label>
+              <select name="type" class="inp">
+                ${['löpning','cykling','simning','gym','promenad','skidor','annat'].map(t=>`<option value="${t}"${(pf.type||'löpning')===t?' selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Passtyp</label>
+              <select name="passtyp" class="inp">
+                <option value="">Välj passtyp</option>
+                ${passtypOpts(pf.passtyp||'')}
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Datum</label>
+              <input name="date" type="date" class="inp" value="${today}" required>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Tid (minuter) *</label>
+              <input name="dur" type="number" class="inp" value="${pf.dur||''}" placeholder="45" min="1" max="600" required>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Distans (km)</label>
+              <input name="km" type="number" class="inp" value="${pf.km||''}" placeholder="7.10" step="any" min="0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="lbl">Planerad intensitet</div>
+        <div class="flex gap-2" id="zselector">
+          ${[1,2,3,4,5].map(z=>`
+            <div class="zone-opt${z===selZ?' sel-z'+z:''}" data-z="${z}" onclick="pickZ(${z})">
+              <div>Z${z}</div>
+              <div style="font-size:9px;margin-top:2px">${['','Återh.','Aerob','Tempo','Tröskel','Max'][z]}</div>
+            </div>
+          `).join('')}
+        </div>
+        <input type="hidden" name="pz" id="pzv" value="${selZ}">
+        <div style="margin-top:18px">
+          <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:8px">Upplevd ansträngning (RPE)</label>
+          <div class="flex items-center gap-3">
+            <input type="range" name="rpe" min="1" max="10" value="${pf.rpe||5}" style="flex:1;accent-color:#6366f1" oninput="document.getElementById('rpev').textContent=this.value+'/10'">
+            <span id="rpev" style="width:48px;text-align:center;font-weight:700;color:var(--accent);font-size:14px">${pf.rpe||5}/10</span>
+          </div>
+          <div class="flex justify-between" style="font-size:11px;color:var(--text-muted);margin-top:3px">
+            <span>Extremt lätt</span><span>Medel</span><span>Maximalt</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between" style="cursor:pointer" onclick="toggleSec('wsec','warr')">
+          <div class="lbl" style="margin-bottom:0;display:flex;align-items:center;gap:6px">${ico('watch',12)} Data från träningsklockan</div>
+          <span id="warr" style="color:var(--text-secondary);font-size:13px">${hasWatchData?'▼':'▶'}</span>
+        </div>
+        <div id="wsec" style="margin-top:16px;${hasWatchData?'':'display:none'}">
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Snittpuls (bpm)</label><input name="hr" type="number" class="inp" value="${pf.hr||''}" placeholder="145" min="50" max="220"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Maxpuls i passet</label><input name="hrmax" type="number" class="inp" value="${pf.hrmax||''}" placeholder="172" min="50" max="250"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Snittempo (min/km)</label><input name="pace" type="text" class="inp" value="${pf.pace||''}" placeholder="5:30"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Kadens (steg/min)</label><input name="cad" type="number" class="inp" value="${pf.cad||''}" placeholder="170" min="50" max="250"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Kalorier (kcal)</label><input name="kcal" type="number" class="inp" value="${pf.kcal||''}" placeholder="450" min="0"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Höjdmeter (m)</label><input name="elev" type="number" class="inp" value="${pf.elev||''}" placeholder="80" min="0"></div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">Tid i pulszoner (minuter)</div>
+            <div class="space-y-3">
+              ${[[1,'Zon 1 – Återhämtning','< 60% av maxpuls'],[2,'Zon 2 – Aerob bas','60–70%'],[3,'Zon 3 – Tempo','70–80%'],[4,'Zon 4 – Tröskel','80–90%'],[5,'Zon 5 – Max','> 90%']].map(([z,n,p])=>`
+                <div class="flex items-center gap-3">
+                  <div style="width:10px;height:10px;border-radius:50%;background:${zcol(z)};flex-shrink:0"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;font-weight:600;color:var(--text)">${n}</div>
+                    <div style="font-size:11px;color:var(--text-muted)">${p} av maxpuls</div>
+                  </div>
+                  <input name="z${z}" type="number" min="0" max="600" value="${pf['z'+z]||''}" placeholder="0" class="inp text-center" style="width:68px;padding:7px 4px;font-size:14px">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <label class="lbl">Anteckningar</label>
+        <textarea name="notes" class="inp" placeholder="Hur kändes passet? Väder, underlag, sömn, energinivå..."></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-p w-full" style="padding:15px;font-size:15px">Spara träningspass</button>
+      <div style="height:24px"></div>
+    </form>
+  </div>`;
+}
+
+function pickZ(z){
+  selZ=z;document.getElementById('pzv').value=z;
+  document.querySelectorAll('.zone-opt').forEach(el=>{
+    const ez=parseInt(el.dataset.z);
+    el.className='zone-opt'+(ez===z?' sel-z'+z:'');
+  });
+}
+
+function toggleSec(sid,aid){
+  const s=document.getElementById(sid),a=document.getElementById(aid);
+  const hidden=s.style.display==='none';
+  s.style.display=hidden?'':'none';a.textContent=hidden?'▼':'▶';
+}
+
+function doLog(e){
+  e.preventDefault();
+  const fd=new FormData(e.target),g=k=>fd.get(k);
+  const zones={};let hasZ=false;
+  for(let z=1;z<=5;z++){const v=parseInt(g('z'+z));if(v>0){zones['z'+z]=v;hasZ=true;}}
+  const wd={};
+  const hr=parseInt(g('hr'));if(hr)wd.hr=hr;
+  const hrmax=parseInt(g('hrmax'));if(hrmax)wd.hrmax=hrmax;
+  const pace=g('pace')?.trim();if(pace)wd.pace=pace;
+  const cad=parseInt(g('cad'));if(cad)wd.cad=cad;
+  const kcal=parseInt(g('kcal'));if(kcal)wd.kcal=kcal;
+  const elev=parseInt(g('elev'));if(elev)wd.elev=elev;
+  if(hasZ)wd.zones=zones;
+  const w={id:uid(),name:g('name'),type:g('type'),passtyp:g('passtyp')||null,date:g('date'),dur:parseInt(g('dur')),km:parseFloat((g('km')||'').replace(',','.'))||null,pz:parseInt(g('pz'))||null,rpe:parseInt(g('rpe'))||null,notes:g('notes')||null,wd:Object.keys(wd).length?wd:null,ts:new Date().toISOString()};
+  S.workouts.push(w);save();
+  if(w.wd?.hr&&w.pz){const az=zone(w.wd.hr);if(az>w.pz+1){toast('Puls i Zon '+az+' men planerat Zon '+w.pz,'warn');setTimeout(()=>go('det',{id:w.id}),600);return;}}
+  toast('Pass sparat! ✓');go('det',{id:w.id});
+}
+
+// ──────────────────────────────────────────────
+// EDIT WORKOUT
+// ──────────────────────────────────────────────
+function vEdit(id){
+  const w=S.workouts.find(x=>x.id===id);
+  if(!w)return`<div style="padding:48px;text-align:center;color:var(--text-muted)">Pass hittades inte.</div>`;
+  const wd=w.wd||{};
+  const zones=wd.zones||{};
+  selZ=w.pz||2;
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <div class="flex items-center gap-2 mb-6">
+      <button onclick="go('det',{id:'${w.id}'})" class="back-btn">←</button>
+      <h1 class="page-title">Redigera träningspass</h1>
+    </div>
+
+    <form id="wf" onsubmit="doEdit(event,'${w.id}')" class="space-y-4">
+
+      <div class="card p-5">
+        <div class="lbl">Grundinfo</div>
+        <div class="space-y-3">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Passnamn *</label>
+            <input name="name" type="text" class="inp" value="${w.name||''}" placeholder="t.ex. Morgonlöpning" required>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Träningstyp</label>
+              <select name="type" class="inp">
+                ${['löpning','cykling','simning','gym','promenad','skidor','annat'].map(t=>`<option value="${t}"${w.type===t?' selected':''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Passtyp</label>
+              <select name="passtyp" class="inp">
+                <option value="">Välj passtyp</option>
+                ${passtypOpts(w.passtyp||'')}
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Datum</label>
+              <input name="date" type="date" class="inp" value="${w.date}" required>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Tid (minuter) *</label>
+              <input name="dur" type="number" class="inp" value="${w.dur||''}" placeholder="45" min="1" max="600" required>
+            </div>
+            <div>
+              <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Distans (km)</label>
+              <input name="km" type="number" class="inp" value="${w.km||''}" placeholder="7.10" step="any" min="0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="lbl">Planerad intensitet</div>
+        <div class="flex gap-2" id="zselector">
+          ${[1,2,3,4,5].map(z=>`
+            <div class="zone-opt${z===selZ?' sel-z'+z:''}" data-z="${z}" onclick="pickZ(${z})">
+              <div>Z${z}</div>
+              <div style="font-size:9px;margin-top:2px">${['','Återh.','Aerob','Tempo','Tröskel','Max'][z]}</div>
+            </div>
+          `).join('')}
+        </div>
+        <input type="hidden" name="pz" id="pzv" value="${selZ}">
+        <div style="margin-top:18px">
+          <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:8px">Upplevd ansträngning (RPE)</label>
+          <div class="flex items-center gap-3">
+            <input type="range" name="rpe" min="1" max="10" value="${w.rpe||5}" style="flex:1;accent-color:#6366f1" oninput="document.getElementById('rpev').textContent=this.value+'/10'">
+            <span id="rpev" style="width:48px;text-align:center;font-weight:700;color:var(--accent);font-size:14px">${w.rpe||5}/10</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between" style="cursor:pointer" onclick="toggleSec('wsec','warr')">
+          <div class="lbl" style="margin-bottom:0;display:flex;align-items:center;gap:6px">${ico('watch',12)} Data från träningsklockan</div>
+          <span id="warr" style="color:var(--text-secondary);font-size:13px">▼</span>
+        </div>
+        <div id="wsec" style="margin-top:16px">
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Snittpuls (bpm)</label><input name="hr" type="number" class="inp" value="${wd.hr||''}" placeholder="145" min="50" max="220"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Maxpuls i passet</label><input name="hrmax" type="number" class="inp" value="${wd.hrmax||''}" placeholder="172" min="50" max="250"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Snittempo (min/km)</label><input name="pace" type="text" class="inp" value="${wd.pace||''}" placeholder="5:30"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Kadens (steg/min)</label><input name="cad" type="number" class="inp" value="${wd.cad||''}" placeholder="170" min="50" max="250"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Kalorier (kcal)</label><input name="kcal" type="number" class="inp" value="${wd.kcal||''}" placeholder="450" min="0"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Höjdmeter (m)</label><input name="elev" type="number" class="inp" value="${wd.elev||''}" placeholder="80" min="0"></div>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px">Tid i pulszoner (minuter)</div>
+            <div class="space-y-3">
+              ${[[1,'Zon 1 – Återhämtning','< 60%'],[2,'Zon 2 – Aerob bas','60–70%'],[3,'Zon 3 – Tempo','70–80%'],[4,'Zon 4 – Tröskel','80–90%'],[5,'Zon 5 – Max','> 90%']].map(([z,n,p])=>`
+                <div class="flex items-center gap-3">
+                  <div style="width:10px;height:10px;border-radius:50%;background:${zcol(z)};flex-shrink:0"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;font-weight:600;color:var(--text)">${n}</div>
+                    <div style="font-size:11px;color:var(--text-muted)">${p} av maxpuls</div>
+                  </div>
+                  <input name="z${z}" type="number" min="0" max="600" value="${zones['z'+z]||''}" placeholder="0" class="inp text-center" style="width:68px;padding:7px 4px;font-size:14px">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <label class="lbl">Anteckningar</label>
+        <textarea name="notes" class="inp" placeholder="Hur kändes passet?">${w.notes||''}</textarea>
+      </div>
+
+      <button type="submit" class="btn btn-p w-full" style="padding:15px;font-size:15px">Spara ändringar</button>
+      <div style="height:24px"></div>
+    </form>
+  </div>`;
+}
+
+function doEdit(e,id){
+  e.preventDefault();
+  const idx=S.workouts.findIndex(x=>x.id===id);
+  if(idx===-1)return;
+  const fd=new FormData(e.target),g=k=>fd.get(k);
+  const zones={};let hasZ=false;
+  for(let z=1;z<=5;z++){const v=parseInt(g('z'+z));if(v>0){zones['z'+z]=v;hasZ=true;}}
+  const wd={};
+  const hr=parseInt(g('hr'));if(hr)wd.hr=hr;
+  const hrmax=parseInt(g('hrmax'));if(hrmax)wd.hrmax=hrmax;
+  const pace=g('pace')?.trim();if(pace)wd.pace=pace;
+  const cad=parseInt(g('cad'));if(cad)wd.cad=cad;
+  const kcal=parseInt(g('kcal'));if(kcal)wd.kcal=kcal;
+  const elev=parseInt(g('elev'));if(elev)wd.elev=elev;
+  if(hasZ)wd.zones=zones;
+  S.workouts[idx]=Object.assign(S.workouts[idx],{
+    name:g('name'),type:g('type'),passtyp:g('passtyp')||null,date:g('date'),dur:parseInt(g('dur')),
+    km:parseFloat((g('km')||'').replace(',','.'))||null,
+    pz:parseInt(g('pz'))||null,rpe:parseInt(g('rpe'))||null,
+    notes:g('notes')||null,wd:Object.keys(wd).length?wd:null
+  });
+  save();
+  toast('Ändringar sparade! ✓');go('det',{id});
+}
+
+// ──────────────────────────────────────────────
+// WORKOUT DETAIL
+// ──────────────────────────────────────────────
+function vDet(id){
+  const w=S.workouts.find(x=>x.id===id);
+  if(!w)return`<div style="padding:48px;text-align:center;color:var(--text-muted)">Pass hittades inte.</div>`;
+  const wd=w.wd||{};
+  const az=wd.hr?zone(wd.hr):null;
+  const mhr=MHR();
+  const disc=w.pz&&az&&az>w.pz+1;
+  const zones=wd.zones||{};
+  const totalZ=Object.values(zones).reduce((s,v)=>s+(v||0),0);
+
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-2">
+        <button onclick="go('hist')" class="back-btn">←</button>
+        <h1 class="page-title truncate" style="font-size:18px">${w.name||w.type}</h1>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="go('edit',{id:'${w.id}'})" class="btn btn-s" style="padding:6px 12px;font-size:13px;gap:5px">${ico('pencil',13)} Redigera</button>
+        <button onclick="confirmDel('${w.id}')" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;color:var(--danger);border:none;background:rgba(239,68,68,0.12);border-radius:8px;cursor:pointer">${ico('trash',14)}</button>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-4 fade-in">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-2xl ${w.pz?zcls(w.pz):''} flex items-center justify-center flex-shrink-0" style="${!w.pz?'background:var(--surface-muted)':''}font-size:24px">${ticon(w.type)}</div>
+        <div class="flex-1">
+          <div style="font-weight:700;color:var(--text)">${w.name||w.type}</div>
+          <div style="font-size:13px;color:var(--text-secondary)">${fdate(w.date)}${w.passtyp?' · '+pLabel(w.passtyp):''}</div>
+        </div>
+        ${w.pz?`<span class="font-semibold text-xs px-2.5 py-1 rounded-full ${zcls(w.pz)}">Planerat Z${w.pz}</span>`:''}
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="text-center rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-weight:700;color:var(--text);font-size:15px">${dur(w.dur)}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">Tid</div></div>
+        <div class="text-center rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-weight:700;color:var(--text);font-size:15px">${w.km?w.km+' km':'-'}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">Distans</div></div>
+        <div class="text-center rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-weight:700;color:var(--text);font-size:15px">${w.rpe?w.rpe+'/10':'-'}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">RPE</div></div>
+      </div>
+    </div>
+
+    ${disc?`
+    <div class="card alert-card p-4 mb-4 fade-in">
+      <div class="flex gap-3">
+        <span style="color:var(--warning)">${ico('alert',22)}</span>
+        <div>
+          <div style="font-weight:600;color:var(--warning);margin-bottom:4px">Hög puls för planerad zon</div>
+          <p style="font-size:13px;color:#d97706;line-height:1.55">
+            Du planerade ett <strong>Zon ${w.pz}</strong>-pass men snittpulsen <strong>${wd.hr} bpm</strong> hamnar i <strong>Zon ${az}</strong>.
+            Zon ${w.pz} för dig är ${Math.round(mhr*[0,.55,.60,.70,.80,.90][w.pz])}–${Math.round(mhr*[0,.60,.70,.80,.90,1][w.pz])} bpm.
+          </p>
+        </div>
+      </div>
+    </div>
+    `:''}
+
+    ${Object.keys(wd).length?`
+    <div class="card p-5 mb-4 fade-in">
+      <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('watch',12)} Klockdata</div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        ${wd.hr?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Snittpuls</div><div style="font-weight:700;color:var(--text)">${wd.hr} bpm <span class="text-xs font-semibold px-1.5 py-0.5 rounded ${zcls(az)}">Z${az}</span></div></div>`:''}
+        ${wd.hrmax?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Maxpuls</div><div style="font-weight:700;color:var(--text)">${wd.hrmax} bpm</div></div>`:''}
+        ${wd.pace?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Snittempo</div><div style="font-weight:700;color:var(--text)">${wd.pace} min/km</div></div>`:''}
+        ${wd.cad?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Kadens</div><div style="font-weight:700;color:var(--text)">${wd.cad} spm</div></div>`:''}
+        ${wd.kcal?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Kalorier</div><div style="font-weight:700;color:var(--text)">${wd.kcal} kcal</div></div>`:''}
+        ${wd.elev?`<div class="rounded-xl p-3" style="background:var(--surface-muted)"><div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">Höjdmeter</div><div style="font-weight:700;color:var(--text)">${wd.elev} m</div></div>`:''}
+      </div>
+      ${totalZ>0?`
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">Pulszonfördelning</div>
+          <canvas id="zc" height="90"></canvas>
+          <div class="flex flex-wrap gap-1.5 mt-3">
+            ${[1,2,3,4,5].filter(z=>zones['z'+z]).map(z=>`
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${zcls(z)}">Z${z}: ${zones['z'+z]} min (${Math.round(zones['z'+z]/totalZ*100)}%)</span>
+            `).join('')}
+          </div>
+        </div>
+      `:''}
+    </div>
+    `:''}
+
+    ${w.ai?`
+    <div class="card insight-card p-5 mb-4 fade-in">
+      <div class="flex items-center gap-2 mb-3"><span style="color:var(--accent)">${ico('bot',15)}</span><span style="font-weight:600;color:var(--accent);font-size:14px">AI-feedback för detta pass</span></div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;white-space:pre-line">${w.ai}</div>
+    </div>
+    `:S.user.key?`
+    <button onclick="aiWorkout('${w.id}')" id="aib-${w.id}" class="btn btn-s w-full mb-4" style="padding:13px;font-size:14px;gap:7px">${ico('bot',15)} Analysera detta pass med AI</button>
+    `:''}
+
+    ${w.notes?`
+    <div class="card p-5 mb-4 fade-in">
+      <div class="lbl">Anteckningar</div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">${w.notes}</p>
+    </div>
+    `:''}
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+// ──────────────────────────────────────────────
+// HISTORY
+// ──────────────────────────────────────────────
+function vHist(){
+  const sorted=[...S.workouts].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const byMon={};
+  sorted.forEach(w=>{const k=w.date.slice(0,7);if(!byMon[k])byMon[k]=[];byMon[k].push(w);});
+
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <div class="flex items-center justify-between mb-5">
+      <h1 class="page-title">Historik</h1>
+      <button onclick="go('log')" class="btn btn-p" style="padding:9px 18px;font-size:13px;gap:6px">${ico('plus',14)} Logga</button>
+    </div>
+
+    ${S.workouts.length>=2?`
+    <div class="card p-5 mb-4 fade-in">
+      <div class="lbl">Veckovolym – senaste 8 veckor</div>
+      <canvas id="wc" height="100"></canvas>
+    </div>
+    `:''}
+
+    ${sorted.length===0?`
+    <div class="card p-10 text-center fade-in">
+      <div style="font-size:44px;margin-bottom:12px">📭</div>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px">Inga pass loggade ännu</p>
+      <button onclick="go('log')" class="btn btn-p" style="padding:11px 22px;font-size:14px">Logga ditt första pass</button>
+    </div>
+    `:Object.entries(byMon).sort((a,b)=>b[0].localeCompare(a[0])).map(([m,ws])=>{
+      const totKm=ws.reduce((s,w)=>s+(w.km||0),0);
+      const totMin=ws.reduce((s,w)=>s+(w.dur||0),0);
+      return `
+      <div class="mb-4 fade-in">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;padding:0 4px">
+          ${new Date(m+'-15').toLocaleDateString('sv-SE',{month:'long',year:'numeric'})}
+          <span style="font-weight:400;color:var(--text-muted);margin-left:8px">· ${ws.length} pass · ${totKm.toFixed(1)} km · ${dur(totMin)}</span>
+        </div>
+        <div class="card overflow-hidden" style="padding:0">
+          ${ws.map((w,i)=>{
+            const wd2=w.wd||{};const az2=wd2.hr?zone(wd2.hr):null;const disc2=w.pz&&az2&&az2>w.pz+1;
+            return `
+            <div onclick="go('det',{id:'${w.id}'})" class="flex items-center gap-3 row-hover transition-colors" style="padding:14px 16px;${i<ws.length-1?'border-bottom:1px solid var(--border-light)':''}cursor:pointer">
+              <div class="w-9 h-9 rounded-xl ${w.pz?zcls(w.pz):''} flex items-center justify-center flex-shrink-0" style="${!w.pz?'background:var(--surface-muted)':''}font-size:16px">${ticon(w.type)}</div>
+              <div class="flex-1 min-w-0">
+                <div style="font-weight:600;color:var(--text);font-size:14px" class="truncate">${w.name||w.type}</div>
+                <div style="font-size:12px;color:var(--text-secondary)">${fdate(w.date,true)} · ${dur(w.dur)}${w.km?' · '+w.km+'km':''}${w.passtyp?' · '+pLabel(w.passtyp):''}</div>
+              </div>
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                ${wd2.hr?`<span class="font-semibold text-xs px-2 py-0.5 rounded-lg ${zcls(az2)}">♥${wd2.hr}</span>`:''}
+                ${disc2?`<span style="color:var(--warning)">${ico('alert',14)}</span>`:''}
+                <span style="color:var(--text-muted)">›</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+// ──────────────────────────────────────────────
+// GOAL
+// ──────────────────────────────────────────────
+function vGoal(){if(!S.goal)return vGoalForm();
+  const g=S.goal,dl=daysTo(g.tgt);
+  const totKm=S.workouts.reduce((s,w)=>s+(w.km||0),0);
+  const daysSince=Math.max(1,Math.ceil((Date.now()-new Date(g.ts))/864e5));
+
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <div class="flex items-center justify-between mb-5">
+      <h1 class="page-title">Mitt mål</h1>
+      <button onclick="if(confirm('Byta mål?')){S.goal=null;save();go('goal');}" style="font-size:13px;color:var(--text-secondary);border:none;background:transparent;cursor:pointer;font-family:inherit">Byt mål</button>
+    </div>
+
+    <div class="card goal-hero p-6 mb-4 fade-in">
+      <div class="flex items-start justify-between mb-3">
+        <div>
+          <div class="lbl">Ditt mål</div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);line-height:1.25">${g.desc}</div>
+        </div>
+        <span style="margin-left:14px;flex-shrink:0;color:var(--accent);opacity:0.85">${gicon(g.type,38)}</span>
+      </div>
+      <div class="goal-hero-inner">
+        ${ico('calendar',13)} ${new Date(g.tgt).toLocaleDateString('sv-SE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
+        · <strong style="color:var(--text)">${dl>0?dl+' dagar kvar':dl===0?'Idag!':'Passerat'}</strong>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      ${[{v:S.workouts.length,u:'Loggade pass totalt'},{v:totKm.toFixed(0)+' km',u:'Total distans'},{v:(totKm/(daysSince/7)).toFixed(1)+' km',u:'Snitt km per vecka'},{v:Math.max(0,Math.ceil(dl/7))+' veckor',u:'Till målet'}].map(({v,u})=>`
+        <div class="card p-4 fade-in">
+          <div style="font-size:22px;font-weight:700;color:var(--text)">${v}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${u}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    ${g.wkm?`
+    <div class="card p-5 mb-4 fade-in">
+      <div class="lbl">Veckomål – ${g.wkm} km/vecka</div>
+      ${[0,1,2,3].map(wa=>{
+        const ws=wstats(wa),pct=Math.min(100,ws.km/g.wkm*100);
+        const lbl=wa===0?'Denna vecka':wa===1?'Förra veckan':wa+' veckor sedan';
+        return `
+          <div style="margin-bottom:14px">
+            <div class="flex justify-between" style="font-size:13px;margin-bottom:6px">
+              <span style="color:var(--text-secondary)">${lbl}</span>
+              <span style="font-weight:600;color:${pct>=100?'var(--success)':pct>=70?'var(--accent)':'var(--text-muted)'}">${ws.km.toFixed(1)} km</span>
+            </div>
+            <div class="pbar"><div class="pfill" style="width:${pct.toFixed(0)}%;background:${pct>=100?'#10b981':pct>=70?'linear-gradient(90deg,#6366f1,#8b5cf6)':'#374151'}"></div></div>
+          </div>`;
+      }).join('')}
+    </div>
+    `:''}
+    ${g.notes?`<div class="card p-5 mb-4 fade-in"><div class="lbl">Anteckningar</div><p style="font-size:13px;color:var(--text-secondary);line-height:1.65">${g.notes}</p></div>`:''}
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+function vGoalForm(){
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <h1 class="page-title" style="margin-bottom:4px">Sätt ditt mål</h1>
+    <p class="page-subtitle" style="margin-bottom:20px">Definiera vad du tränar mot för att få personlig AI-uppföljning.</p>
+    <form onsubmit="doGoal(event)" class="space-y-4">
+      <div class="card p-5">
+        <div class="lbl">Typ av mål</div>
+        <div class="grid grid-cols-2 gap-2 mb-4">
+          ${[['maraton','medal','Maraton','42.2 km'],['halvmaraton','trophy','Halvmaraton','21.1 km'],['10k','flag','10 km','Löptävling'],['5k','flag','5 km','Löptävling'],['cykling','bike','Cykling','Valfritt lopp'],['anpassad','star','Eget mål','Valfritt']].map(([v,ic,l,s])=>`
+            <label style="cursor:pointer">
+              <input type="radio" name="type" value="${v}" class="sr-only" onchange="onGType('${v}')">
+              <div class="goal-tb rounded-xl text-center transition-all" style="padding:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)" data-gv="${v}">
+                <div style="color:var(--accent);margin-bottom:5px">${ico(ic,20)}</div>
+                <div style="font-weight:600;color:var(--text);font-size:13px">${l}</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${s}</div>
+              </div>
+            </label>
+          `).join('')}
+        </div>
+        <div class="space-y-3">
+          <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Beskrivning *</label><input type="text" name="desc" id="gdesc" class="inp" placeholder="t.ex. Springa Stockholm Marathon 2026" required></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Måldatum *</label><input type="date" name="tgt" class="inp" required min="${new Date().toISOString().split('T')[0]}"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Veckamål (km/v)</label><input type="number" name="wkm" class="inp" placeholder="t.ex. 50" min="0" step="5"></div>
+          </div>
+          <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Anteckningar</label><textarea name="notes" class="inp" placeholder="Varför är detta mål viktigt för dig?"></textarea></div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-p w-full" style="padding:15px;font-size:15px;gap:8px">${ico('target',16)} Spara mål</button>
+      <div style="height:24px"></div>
+    </form>
+  </div>`;
+}
+
+function onGType(v){
+  const descs={maraton:'Springa maraton',halvmaraton:'Springa halvmaraton','10k':'Springa 10 km','5k':'Springa 5 km',cykling:'Cykla lopp',anpassad:''};
+  const el=document.getElementById('gdesc');if(el&&!el.value)el.value=descs[v]||'';
+  document.querySelectorAll('.goal-tb').forEach(b=>{
+    if(b.dataset.gv===v){b.style.borderColor='rgba(99,102,241,0.6)';b.style.background='rgba(99,102,241,0.15)';}
+    else{b.style.borderColor='rgba(255,255,255,0.1)';b.style.background='rgba(255,255,255,0.04)';}
+  });
+}
+
+function doGoal(e){
+  e.preventDefault();const fd=new FormData(e.target),g=k=>fd.get(k);
+  S.goal={id:uid(),type:g('type')||'anpassad',desc:g('desc'),tgt:g('tgt'),wkm:parseFloat(g('wkm'))||null,notes:g('notes')||null,ts:new Date().toISOString()};
+  save();toast('Mål sparat!');go('goal');
+}
+
+// ──────────────────────────────────────────────
+// AI ANALYSIS
+// ──────────────────────────────────────────────
+function vAI(){
+  const hasKey=!!S.user.key,hasData=S.workouts.length>0;
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <h1 class="page-title" style="margin-bottom:4px">AI Tränaranalys</h1>
+    <p class="page-subtitle" style="margin-bottom:20px">Personlig feedback baserad på din träningshistorik och pulszoner.</p>
+
+    ${!hasKey?`
+    <div class="card alert-card p-6 mb-5 fade-in">
+      <div class="flex gap-3"><span style="font-size:24px">🔑</span>
+        <div>
+          <div style="font-weight:600;color:var(--warning);margin-bottom:4px">API-nyckel krävs</div>
+          <p style="font-size:13px;color:#d97706;margin-bottom:12px">Lägg till din Anthropic API-nyckel i Profil för att aktivera AI-analysen.</p>
+          <button onclick="go('prof')" class="btn btn-p" style="padding:9px 18px;font-size:13px">Gå till Profil →</button>
+        </div>
+      </div>
+    </div>
+    `:!hasData?`
+    <div class="card p-10 text-center fade-in">
+      <div style="margin-bottom:16px;color:var(--accent);opacity:0.45">${ico('chart',48)}</div>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px">Logga minst ett träningspass för att få AI-analys.</p>
+      <button onclick="go('log')" class="btn btn-p" style="padding:11px 22px;font-size:14px">Logga pass →</button>
+    </div>
+    `:`
+    <button onclick="runAI()" id="runbtn" class="btn btn-p w-full mb-5" style="padding:15px;font-size:15px;gap:8px">${ico('bot',16)} Analysera min träning nu</button>
+    <div id="aiload" class="card p-10 text-center hidden mb-4">
+      <div class="inline-block w-10 h-10 rounded-full spin mb-4" style="border:3px solid rgba(99,102,241,0.2);border-top-color:#6366f1"></div>
+      <p style="font-weight:700;color:var(--text)">AI analyserar din träning…</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:4px">Granskar pulszoner, framsteg och mönster</p>
+    </div>
+    `}
+
+    ${S.last?`
+    <div class="fade-in">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:6px">
+        <span style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;box-shadow:0 0 8px rgba(16,185,129,0.5)"></span>
+        Analyserad ${fdate(S.last.date,true)} · ${S.last.cnt} pass analyserade
+      </div>
+      ${parseAI(S.last.text)}
+    </div>
+    `:hasKey&&hasData?`
+    <div class="card p-10 text-center fade-in" style="color:var(--text-muted)">
+      <div style="margin-bottom:14px;color:var(--accent);opacity:0.4">${ico('bot',48)}</div>
+      <p style="font-size:13px">Klicka ovan för personlig tränarfeedback</p>
+    </div>
+    `:''}
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+function parseAI(text){
+  const smap={
+    'framstegsanalys': {icon:'chart',   col:'#34d399', bg:'rgba(16,185,129,0.08)',  label:'Framstegsanalys'},
+    'pulszonanalys':   {icon:'activity',col:'#f87171', bg:'rgba(239,68,68,0.08)',    label:'Pulszonanalys'},
+    'varningar':       {icon:'alert',   col:'#fbbf24', bg:'rgba(245,158,11,0.08)',   label:'Varningar'},
+    'rekommendationer':{icon:'star',    col:'#818cf8', bg:'rgba(99,102,241,0.08)',   label:'Rekommendationer'},
+  };
+  const lines=text.split('\n');const sections=[];let cur=null;
+  for(const ln of lines){
+    if(ln.startsWith('## ')){
+      const key=ln.slice(3).trim().toLowerCase().replace(/\s+/g,'');
+      const style=Object.entries(smap).find(([k])=>key.startsWith(k));
+      if(cur)sections.push(cur);
+      cur={heading:ln.slice(3).trim(),body:[],style:style?style[1]:{icon:'target',col:'#8b5cf6',bg:'rgba(139,92,246,0.08)',label:ln.slice(3).trim()}};
+    } else if(cur){cur.body.push(ln);}
+  }
+  if(cur)sections.push(cur);
+  if(!sections.length)return`<div class="card p-5"><div style="font-size:13px;color:var(--text-secondary);line-height:1.7;white-space:pre-line">${text}</div></div>`;
+  return sections.map(s=>`
+    <div class="card p-5 mb-3" style="border-left:3px solid ${s.style.col};background:${s.style.bg}">
+      <div class="flex items-center gap-2 mb-3">
+        <span style="color:${s.style.col}">${ico(s.style.icon,15)}</span>
+        <span style="font-weight:600;color:var(--text);font-size:14px;letter-spacing:.01em">${s.style.label}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.75;white-space:pre-line">${s.body.join('\n').trim()}</div>
+    </div>
+  `).join('');
+}
+
+// ──────────────────────────────────────────────
+// PROFILE
+// ──────────────────────────────────────────────
+function vProf(){
+  const u=S.user;
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <h1 class="page-title" style="margin-bottom:20px">Profil & Inställningar</h1>
+    <form onsubmit="doProf(event)" class="space-y-4">
+      <div class="card p-5">
+        <div class="lbl">Om mig</div>
+        <div class="space-y-3">
+          <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Namn</label><input name="name" type="text" class="inp" placeholder="Ditt namn" value="${u.name||''}"></div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Ålder</label><input name="age" type="number" class="inp" placeholder="30" value="${u.age||''}" min="10" max="100" oninput="document.getElementById('cmhr').textContent=this.value?(220-parseInt(this.value))+' bpm':'–'"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Vilopuls (bpm)</label><input name="rhr" type="number" class="inp" placeholder="55" value="${u.rhr||''}" min="30" max="100"></div>
+            <div><label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Maxpuls (bpm)</label><input name="mhr" type="number" class="inp" placeholder="190" value="${u.mhr||''}" min="120" max="230"></div>
+            <div class="flex items-end">
+              <div class="rounded-xl w-full text-center surface-muted" style="border:1px solid var(--accent-border);padding:12px">
+                <div style="font-size:11px;color:var(--text-secondary);margin-bottom:3px">Beräknad max</div>
+                <div id="cmhr" style="font-weight:700;color:var(--accent)">${u.age?220-u.age+' bpm':'–'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('bot',12)} AI-inställningar</div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Din nyckel lagras enbart lokalt i din webbläsare och skickas direkt till Anthropic.</p>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Anthropic API-nyckel</label>
+          <div style="position:relative">
+            <input name="key" id="akf" type="password" class="inp" style="padding-right:52px" placeholder="sk-ant-..." value="${u.key||''}">
+            <button type="button" onclick="document.getElementById('akf').type=document.getElementById('akf').type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-secondary);border:none;background:transparent;cursor:pointer;font-family:inherit;font-weight:600">Visa</button>
+          </div>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:5px">Hämta din nyckel på <span style="color:var(--accent)">console.anthropic.com</span></p>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-p w-full" style="padding:15px;font-size:15px;gap:8px">${ico('save',16)} Spara inställningar</button>
+    </form>
+
+    <div class="card p-5 mt-4 insight-card">
+      <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('watch',12)} Apple Watch – automatisk import</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.65">Skapa en genväg i <strong style="color:var(--text)">Genvägar-appen</strong> på din iPhone som läser ditt senaste träningspass och öppnar appen med all data förfylld.</p>
+
+      <div class="lbl" style="margin-bottom:10px">Din app-URL (kopiera in i genvägen)</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+        <code id="appurl" class="code-block" style="flex:1">${location.href.split('?')[0]}</code>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('appurl').textContent).then(()=>toast('URL kopierad!'))" class="btn btn-s" style="flex-shrink:0;padding:7px 10px;font-size:12px">Kopiera</button>
+      </div>
+
+      <div class="lbl" style="margin-bottom:10px">Så här skapar du genvägen</div>
+      <ol style="font-size:13px;color:var(--text-secondary);line-height:1.9;padding-left:18px;margin-bottom:14px">
+        <li>Öppna <strong style="color:var(--text)">Genvägar</strong>-appen på iPhone och tryck <strong style="color:var(--text)">+</strong></li>
+        <li>Sök och lägg till <strong style="color:var(--text)">"Hämta träningspass"</strong> – välj <em>Senaste träningen</em></li>
+        <li>Lägg till <strong style="color:var(--text)">"Hämta detaljer om träningspass"</strong> – välj Duration, Distance, Active Energy, Avg Heart Rate, Max Heart Rate, Elevation Ascended</li>
+        <li>Lägg till <strong style="color:var(--text)">"URL"</strong> och bygg URL:en:<br>
+          <code class="code-block" style="display:inline-block;margin-top:4px;line-height:1.8">[din-url]?import=1&name=Träningspass&type=löpning&dur=[Minuter]&km=[Kilometer]&hr=[Snittpuls]&hrmax=[Maxpuls]&kcal=[Kalorier]&elev=[Höjdmeter]&date=[Datum ÅÅÅÅ-MM-DD]</code>
+        </li>
+        <li>Lägg till <strong style="color:var(--text)">"Öppna URL:er"</strong> – välj URL:en från förra steget</li>
+        <li>Namnge genvägen <strong style="color:var(--text)">"Logga träning"</strong> och lägg till på hemskärmen</li>
+      </ol>
+      <p style="font-size:12px;color:var(--text-secondary);line-height:1.6">Efter varje träning på Apple Watch: tryck på genvägen på iPhone → appen öppnas med all data ifylld → tryck Spara.</p>
+    </div>
+
+    <div class="card p-5 mt-4" style="border:1px solid rgba(239,68,68,0.22);background:var(--danger-light)">
+      <div class="lbl" style="color:var(--danger)">Rensa data</div>
+      <button onclick="confirmClear()" class="btn btn-s" style="color:var(--danger);border-color:rgba(239,68,68,0.3);padding:8px 16px;font-size:13px;gap:6px">${ico('trash',14)} Rensa alla pass</button>
+    </div>
+
+    <div style="text-align:center;color:var(--text-muted);font-size:11px;margin-top:24px;margin-bottom:32px;line-height:1.9">
+      Träningsdagbok AI · Data lagras lokalt i webbläsaren<br>
+      Drivs av Claude Sonnet (Anthropic)
+    </div>
+  </div>`;
+}
+
+function doProf(e){
+  e.preventDefault();const fd=new FormData(e.target),g=k=>fd.get(k);
+  S.user={name:g('name'),age:parseInt(g('age'))||null,rhr:parseInt(g('rhr'))||null,mhr:parseInt(g('mhr'))||null,key:g('key')};
+  save();toast('Inställningar sparade ✓');go('dash');
+}
+
+// ──────────────────────────────────────────────
+// CLAUDE API
+// ──────────────────────────────────────────────
+async function claude(msgs,sys,maxTok){
+  const k=S.user.key;if(!k)throw new Error('Ingen API-nyckel konfigurerad');
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTok||1024,system:sys,messages:msgs})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'HTTP '+r.status);}
+  return(await r.json()).content[0].text;
+}
+
+function workoutCtx(){
+  return[...S.workouts].sort((a,b)=>new Date(a.date)-new Date(b.date)).map(w=>{
+    const wd=w.wd||{};let l=`[${w.date}] ${w.type}${w.passtyp?'/'+pLabel(w.passtyp):''}: "${w.name}" ${w.dur}min`;
+    if(w.km)l+=` ${w.km}km`;if(w.pz)l+=` | PlanerZon:${w.pz}`;if(w.rpe)l+=` | RPE:${w.rpe}/10`;
+    if(wd.hr){l+=` | Snittpuls:${wd.hr}bpm(Z${zone(wd.hr)})`;}
+    if(wd.hrmax)l+=` | Maxpuls:${wd.hrmax}bpm`;if(wd.pace)l+=` | Tempo:${wd.pace}/km`;
+    if(wd.zones){const zp=Object.entries(wd.zones).map(([k,v])=>k+':'+v+'min').join(',');if(zp)l+=` | Zoner:[${zp}]`;}
+    if(w.notes)l+=` | Not:"${w.notes}"`;return l;
+  }).join('\n');
+}
+
+async function runAI(){
+  const btn=document.getElementById('runbtn'),ld=document.getElementById('aiload');
+  try{
+    if(btn){btn.disabled=true;btn.textContent='Analyserar…';}
+    if(ld)ld.classList.remove('hidden');
+    const mhr=MHR();
+    const sys=`Du är en erfaren löparkonsult och personlig tränare. Du ger PERSONLIG, SPECIFIK feedback på svenska baserat på exakt träningsdata.
+
+PERSONENS PULSZONER (maxpuls ${mhr} bpm):
+  Zon 1 (Återhämtning): < ${Math.round(mhr*.60)} bpm
+  Zon 2 (Aerob bas): ${Math.round(mhr*.60)}–${Math.round(mhr*.70)} bpm
+  Zon 3 (Tempo): ${Math.round(mhr*.70)}–${Math.round(mhr*.80)} bpm
+  Zon 4 (Tröskel): ${Math.round(mhr*.80)}–${Math.round(mhr*.90)} bpm
+  Zon 5 (Max): > ${Math.round(mhr*.90)} bpm
+
+VIKTIGT: Zon 2 ska kunna genomföras med näsandning. Om snittpulsen i ett "Zon 2-pass" hamnar i Zon 3-4 springer personen FÖR HÅRT.
+
+Ge din analys med EXAKT dessa fyra sektioner. Använd EXAKT dessa rubriker på formen "## Rubrik":
+
+## Framstegsanalys
+[Kommentera framsteg mot målet med konkreta siffror.]
+
+## Pulszonanalys
+[Analysera noggrant om personen tränar i rätt zoner. Identifiera specifika pass med zonproblem.]
+
+## Varningar
+[Tecken på övertränining, fel zoner, för snabb volymökning. Om allt är bra: "Ingen varning – träningen ser välbalanserad ut."]
+
+## Rekommendationer
+[Ge 3–4 SPECIFIKA råd för de kommande 2 veckorna.]
+
+Max 550 ord. Använd INGA emojis. Skriv personligt och uppmuntrande men ärligt.`;
+
+    const g=S.goal,u=S.user;
+    const msg=`PROFIL:\nNamn: ${u.name||'–'} | Ålder: ${u.age?u.age+' år':'–'} | Maxpuls: ${mhr} bpm | Vilopuls: ${u.rhr?u.rhr+' bpm':'–'}\n\nMÅL: ${g?`${g.desc} | Datum: ${g.tgt} | Dagar kvar: ${daysTo(g.tgt)} | Veckamål: ${g.wkm||'ej satt'} km/v`:'Inget mål satt'}\n\nTRÄNINGSHISTORIK (${S.workouts.length} pass):\n${workoutCtx()||'(inga pass)'}\n\nGe personlig analys.`;
+    const res=await claude([{role:'user',content:msg}],sys,2000);
+    S.last={text:res,date:new Date().toISOString().split('T')[0],cnt:S.workouts.length};
+    save();go('ai');
+  }catch(err){
+    toast('Fel: '+err.message,'err');
+    if(btn){btn.disabled=false;btn.textContent='Analysera min träning nu';}
+    if(ld)ld.classList.add('hidden');
+  }
+}
+
+async function aiWorkout(id){
+  const w=S.workouts.find(x=>x.id===id);if(!w)return;
+  const btn=document.getElementById('aib-'+id);
+  if(btn){btn.disabled=true;btn.textContent='Analyserar…';}
+  try{
+    const mhr=MHR(),wd=w.wd||{},az=wd.hr?zone(wd.hr):null;
+    const recent=[...S.workouts].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
+    const ctx=recent.map(x=>{const xd=x.wd||{};return`[${x.date}] ${x.type}${x.passtyp?'/'+pLabel(x.passtyp):''}: ${x.name} ${x.dur}min${x.km?' '+x.km+'km':''}${x.pz?' PlaZ'+x.pz:''}${xd.hr?' ♥'+xd.hr+'(Z'+zone(xd.hr)+')':''}${xd.pace?' '+xd.pace+'/km':''}`;}).join('\n');
+    const sys=`Du är personlig tränare. Ge kortfattad feedback (max 120 ord) på svenska om ETT specifikt träningspass. Fokusera på: 1) Var pulsen i rätt zon? 2) Hur relaterar passet till nyligen träning? 3) Konkret råd för nästa pass. Maxpuls: ${mhr} bpm. Z2: ${Math.round(mhr*.6)}–${Math.round(mhr*.7)} bpm.`;
+    const msg=`DETTA PASS:\n${w.date} | ${w.type}${w.passtyp?' / '+pLabel(w.passtyp):''}: "${w.name}" | ${w.dur}min${w.km?' | '+w.km+'km':''}${w.pz?' | Planerat Z'+w.pz:''}${w.rpe?' | RPE '+w.rpe+'/10':''}\n${wd.hr?'Snittpuls: '+wd.hr+'bpm (Zon '+az+')':''}${wd.hrmax?' | Maxpuls: '+wd.hrmax+' bpm':''}${wd.pace?' | Tempo: '+wd.pace+'/km':''}\n${w.notes?'Not: "'+w.notes+'"':''}\n\nSENASTE 8 PASS:\n${ctx}`;
+    const res=await claude([{role:'user',content:msg}],sys,400);
+    const i=S.workouts.findIndex(x=>x.id===id);if(i>=0){S.workouts[i].ai=res;save();}
+    go('det',{id});
+  }catch(err){
+    toast('Fel: '+err.message,'err');
+    if(btn){btn.disabled=false;btn.textContent='Analysera detta pass med AI';}
+  }
+}
+
+// ──────────────────────────────────────────────
+// CHARTS
+// ──────────────────────────────────────────────
+function killCharts(){Object.values(CX).forEach(c=>{try{c.destroy();}catch(e){}});CX={};}
+
+function initCharts(){
+  if(V==='hist'&&S.workouts.length>=2){const el=document.getElementById('wc');if(el)buildWeekly(el);}
+  if(V==='det'){
+    const w=S.workouts.find(x=>x.id===VP.id);const zones=w?.wd?.zones;
+    if(zones&&Object.values(zones).some(v=>v>0)){const el=document.getElementById('zc');if(el)buildZone(el,zones);}
+  }
+}
+
+function buildWeekly(cv){
+  const labs=[],data=[];
+  for(let i=7;i>=0;i--){
+    const ws=wstats(i);
+    const mon=new Date();mon.setDate(mon.getDate()-((mon.getDay()||7)-1)-(i*7));
+    labs.push(i===0?'Denna v':mon.toLocaleDateString('sv-SE',{day:'numeric',month:'short'}));
+    data.push(parseFloat(ws.km.toFixed(1)));
+  }
+  CX.w=new Chart(cv.getContext('2d'),{
+    type:'bar',
+    data:{labels:labs,datasets:[{label:'Km',data,backgroundColor:data.map((_,i)=>i===data.length-1?'rgba(99,102,241,0.9)':'rgba(99,102,241,0.28)'),borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{
+      x:{grid:{display:false},ticks:{font:{size:10},color:'#64748b'}},
+      y:{grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true,ticks:{font:{size:10},color:'#64748b'}}
+    }}
+  });
+}
+
+function buildZone(cv,zones){
+  const cols=['rgba(16,185,129,0.75)','rgba(6,182,212,0.75)','rgba(245,158,11,0.75)','rgba(249,115,22,0.75)','rgba(239,68,68,0.75)'];
+  CX.z=new Chart(cv.getContext('2d'),{
+    type:'bar',
+    data:{labels:['Z1','Z2','Z3','Z4','Z5'],datasets:[{label:'Minuter',data:[1,2,3,4,5].map(z=>zones['z'+z]||0),backgroundColor:cols,borderRadius:5,borderSkipped:false}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{
+      x:{grid:{display:false},ticks:{font:{size:11},color:'#94a3b8'}},
+      y:{grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true,ticks:{font:{size:10},color:'#64748b'},title:{display:true,text:'Minuter',font:{size:10},color:'#64748b'}}
+    }}
+  });
+}
+
+// ──────────────────────────────────────────────
+// UI HELPERS
+// ──────────────────────────────────────────────
+let tT=null;
+function toast(msg,type){
+  document.getElementById('ti').textContent=type==='err'?'✗':type==='warn'?'⚠':'✓';
+  document.getElementById('tm').textContent=msg;
+  document.getElementById('toast').style.opacity='1';
+  clearTimeout(tT);tT=setTimeout(()=>document.getElementById('toast').style.opacity='0',3500);
+}
+
+function showMod(html){
+  document.getElementById('mc').innerHTML=html;
+  const bg=document.getElementById('mbg');bg.classList.remove('hidden');bg.style.display='flex';
+}
+
+function closeMod(e){
+  if(e&&e.target!==document.getElementById('mbg'))return;
+  document.getElementById('mbg').classList.add('hidden');document.getElementById('mbg').style.display='';
+}
+
+function confirmDel(id){
+  showMod(`<div style="text-align:center">
+    <div style="margin-bottom:14px;color:var(--danger);display:flex;justify-content:center">${ico('trash',40)}</div>
+    <div style="font-weight:700;color:var(--text);font-size:16px;margin-bottom:4px">Ta bort pass?</div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px">Det här kan inte ångras.</p>
+    <div class="flex gap-2">
+      <button onclick="closeMod()" class="btn btn-s flex-1" style="padding:12px">Avbryt</button>
+      <button onclick="doDel('${id}')" class="btn flex-1" style="padding:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;box-shadow:0 4px 16px rgba(239,68,68,0.35)">Ta bort</button>
+    </div>
+  </div>`);
+}
+
+function doDel(id){S.workouts=S.workouts.filter(w=>w.id!==id);save();closeMod();toast('Pass borttaget');go('hist');}
+
+function confirmClear(){
+  showMod(`<div style="text-align:center">
+    <div style="margin-bottom:14px;color:var(--warning);display:flex;justify-content:center">${ico('alert',40)}</div>
+    <div style="font-weight:700;color:var(--text);font-size:16px;margin-bottom:4px">Rensa alla pass?</div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px">Alla träningspass tas bort. Profil och mål behålls.</p>
+    <div class="flex gap-2">
+      <button onclick="closeMod()" class="btn btn-s flex-1" style="padding:12px">Avbryt</button>
+      <button onclick="doClear()" class="btn flex-1" style="padding:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;box-shadow:0 4px 16px rgba(239,68,68,0.35)">Rensa</button>
+    </div>
+  </div>`);
+}
+
+function doClear(){S.workouts=[];S.last=null;save();closeMod();toast('Alla pass rensade');go('dash');}
+
+// ──────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',function(){
+  const p=new URLSearchParams(location.search);
+  if(p.get('import')){
+    const pf={
+      name:p.get('name')||'',type:p.get('type')||'löpning',passtyp:p.get('passtyp')||'',
+      date:p.get('date')||new Date().toISOString().split('T')[0],
+      dur:p.get('dur')||'',km:p.get('km')||'',
+      hr:p.get('hr')||'',hrmax:p.get('hrmax')||'',
+      pace:p.get('pace')||'',cad:p.get('cad')||'',
+      kcal:p.get('kcal')||'',elev:p.get('elev')||'',
+      z1:p.get('z1')||'',z2:p.get('z2')||'',z3:p.get('z3')||'',
+      z4:p.get('z4')||'',z5:p.get('z5')||'',
+      rpe:p.get('rpe')||'5',pz:p.get('pz')||'2',
+    };
+    history.replaceState(null,'',location.pathname);
+    go('log',{prefill:pf});
+  } else {
+    go(!S.user.name&&!S.goal?'prof':'dash');
+  }
+});
+</script>
+</body>
+</html>
