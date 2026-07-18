@@ -351,9 +351,25 @@ textarea.inp{resize:vertical;min-height:80px}
 // STATE
 // ──────────────────────────────────────────────
 const SK = 'tdbok-v4';
-function fresh(){return{user:{name:'',age:null,rhr:null,mhr:null,key:''},goal:null,workouts:[],last:null};}
-let S=(function(){try{return Object.assign(fresh(),JSON.parse(localStorage.getItem(SK)||'{}'));}catch(e){return fresh();}})();
+function fresh(){return{user:{name:'',age:null,rhr:null,mhr:null},goal:null,workouts:[],last:null};}
+function loadState(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(SK)||'{}');
+    const base=fresh();
+    return {...base,...raw,user:{...base.user,...(raw.user||{})}};
+  }catch(e){return fresh();}
+}
+let S=loadState();
 function save(){try{localStorage.setItem(SK,JSON.stringify(S));}catch(e){}}
+let AI_SERVER=null;
+async function checkAI(){
+  if(location.protocol==='file:'){AI_SERVER=false;return;}
+  try{
+    const r=await fetch('/api/health');
+    AI_SERVER=r.ok&&!!(await r.json()).ok;
+  }catch(e){AI_SERVER=false;}
+}
+function aiEnabled(){return AI_SERVER===true;}
 
 // ──────────────────────────────────────────────
 // ROUTING
@@ -969,7 +985,7 @@ function vDet(id){
       <div class="flex items-center gap-2 mb-3"><span style="color:var(--accent)">${ico('bot',15)}</span><span style="font-weight:600;color:var(--accent);font-size:14px">AI-feedback för detta pass</span></div>
       <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;white-space:pre-line">${w.ai}</div>
     </div>
-    `:S.user.key?`
+    `:aiEnabled()?`
     <button onclick="aiWorkout('${w.id}')" id="aib-${w.id}" class="btn btn-s w-full mb-4" style="padding:13px;font-size:14px;gap:7px">${ico('bot',15)} Analysera detta pass med AI</button>
     `:''}
 
@@ -1155,18 +1171,18 @@ function doGoal(e){
 // AI ANALYSIS
 // ──────────────────────────────────────────────
 function vAI(){
-  const hasKey=!!S.user.key,hasData=S.workouts.length>0;
+  const hasData=S.workouts.length>0;
+  const aiOff=AI_SERVER===false;
   return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
     <h1 class="page-title" style="margin-bottom:4px">AI Tränaranalys</h1>
     <p class="page-subtitle" style="margin-bottom:20px">Personlig feedback baserad på din träningshistorik och pulszoner.</p>
 
-    ${!hasKey?`
+    ${aiOff?`
     <div class="card alert-card p-6 mb-5 fade-in">
-      <div class="flex gap-3"><span style="font-size:24px">🔑</span>
+      <div class="flex gap-3"><span style="font-size:24px">⚠️</span>
         <div>
-          <div style="font-weight:600;color:var(--warning);margin-bottom:4px">API-nyckel krävs</div>
-          <p style="font-size:13px;color:#d97706;margin-bottom:12px">Lägg till din Anthropic API-nyckel i Profil för att aktivera AI-analysen.</p>
-          <button onclick="go('prof')" class="btn btn-p" style="padding:9px 18px;font-size:13px">Gå till Profil →</button>
+          <div style="font-weight:600;color:var(--warning);margin-bottom:4px">AI inte tillgänglig här</div>
+          <p style="font-size:13px;color:#d97706;margin-bottom:0;line-height:1.55">${location.protocol==='file:'?'Öppna appen via din publicerade webbadress (inte som lokal fil).':'AI-servern är inte konfigurerad ännu.'}</p>
         </div>
       </div>
     </div>
@@ -1193,7 +1209,7 @@ function vAI(){
       </div>
       ${parseAI(S.last.text)}
     </div>
-    `:hasKey&&hasData?`
+    `:hasData?`
     <div class="card p-10 text-center fade-in" style="color:var(--text-muted)">
       <div style="margin-bottom:14px;color:var(--accent);opacity:0.4">${ico('bot',48)}</div>
       <p style="font-size:13px">Klicka ovan för personlig tränarfeedback</p>
@@ -1259,16 +1275,9 @@ function vProf(){
       </div>
 
       <div class="card p-5">
-        <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('bot',12)} AI-inställningar</div>
-        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Din nyckel lagras enbart lokalt i din webbläsare och skickas direkt till Anthropic.</p>
-        <div>
-          <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Anthropic API-nyckel</label>
-          <div style="position:relative">
-            <input name="key" id="akf" type="password" class="inp" style="padding-right:52px" placeholder="sk-ant-..." value="${u.key||''}">
-            <button type="button" onclick="document.getElementById('akf').type=document.getElementById('akf').type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-secondary);border:none;background:transparent;cursor:pointer;font-family:inherit;font-weight:600">Visa</button>
-          </div>
-          <p style="font-size:11px;color:var(--text-muted);margin-top:5px">Hämta din nyckel på <span style="color:var(--accent)">console.anthropic.com</span></p>
-        </div>
+        <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('bot',12)} AI</div>
+        <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:0">AI-analys körs via servern. Du behöver inte lägga in någon API-nyckel i appen – nyckeln ligger säkert på servern.</p>
+        ${AI_SERVER===true?`<div style="font-size:12px;color:var(--success);margin-top:10px;font-weight:600">✓ AI är aktiv</div>`:AI_SERVER===false?`<div style="font-size:12px;color:var(--warning);margin-top:10px;font-weight:600">AI är inte tillgänglig på den här adressen</div>`:''}
       </div>
 
       <button type="submit" class="btn btn-p w-full" style="padding:15px;font-size:15px;gap:8px">${ico('save',16)} Spara inställningar</button>
@@ -1312,7 +1321,12 @@ function vProf(){
 
 function doProf(e){
   e.preventDefault();const fd=new FormData(e.target),g=k=>fd.get(k);
-  S.user={name:g('name'),age:parseInt(g('age'))||null,rhr:parseInt(g('rhr'))||null,mhr:parseInt(g('mhr'))||null,key:g('key')};
+  S.user={
+    name:g('name'),
+    age:parseInt(g('age'))||null,
+    rhr:parseInt(g('rhr'))||null,
+    mhr:parseInt(g('mhr'))||null
+  };
   save();toast('Inställningar sparade ✓');go('dash');
 }
 
@@ -1320,10 +1334,11 @@ function doProf(e){
 // CLAUDE API
 // ──────────────────────────────────────────────
 async function claude(msgs,sys,maxTok){
-  const k=S.user.key;if(!k)throw new Error('Ingen API-nyckel konfigurerad');
-  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':k,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:maxTok||1024,system:sys,messages:msgs})});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||'HTTP '+r.status);}
-  return(await r.json()).content[0].text;
+  if(!aiEnabled())throw new Error('AI är inte tillgänglig. Öppna appen via din publicerade webbadress.');
+  const r=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs,system:sys,max_tokens:maxTok||1024})});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(data.error||'HTTP '+r.status);
+  return data.text;
 }
 
 function workoutCtx(){
@@ -1496,7 +1511,8 @@ function doClear(){S.workouts=[];S.last=null;save();closeMod();toast('Alla pass 
 // ──────────────────────────────────────────────
 // INIT
 // ──────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('DOMContentLoaded',async function(){
+  await checkAI();
   const p=new URLSearchParams(location.search);
   if(p.get('import')){
     const pf={
