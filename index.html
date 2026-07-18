@@ -387,6 +387,57 @@ textarea.inp{resize:vertical;min-height:80px}
 }
 .info-level-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
 .info-level-desc{font-size:12px;color:var(--text-secondary);line-height:1.5}
+
+/* Recommendations */
+.rec-hero{
+  background:linear-gradient(145deg,rgba(99,102,241,0.18) 0%,rgba(139,92,246,0.1) 50%,rgba(255,255,255,0.04) 100%);
+  border:1px solid var(--accent-border);
+}
+.rec-session{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:14px 16px;border-radius:12px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border-light);
+  transition:border-color .15s,background .15s;
+}
+.rec-session.done{border-color:rgba(16,185,129,0.35);background:rgba(16,185,129,0.06)}
+.rec-session-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.rec-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:3px 8px;border-radius:99px;
+}
+.rec-tag-done{background:rgba(16,185,129,0.14);color:var(--success)}
+.rec-tag-suggest{background:rgba(99,102,241,0.14);color:var(--accent)}
+.pass-card{
+  padding:16px 18px;border-radius:12px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border-light);
+}
+.pass-card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
+.pass-card-purpose{font-size:12px;color:var(--text-secondary);line-height:1.55;margin-bottom:8px}
+.pass-card-example{font-size:12px;color:#c7d2fe;line-height:1.5}
+.pass-table{width:100%;border-collapse:collapse;font-size:13px}
+.pass-table th{
+  text-align:left;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--text-muted);padding:12px 16px;border-bottom:1px solid var(--border);
+}
+.pass-table td{
+  padding:12px 16px;color:var(--text-secondary);border-bottom:1px solid var(--border-light);vertical-align:top;
+}
+.pass-table tr:last-child td{border-bottom:none}
+.pass-table td:first-child{font-weight:600;color:var(--text);white-space:nowrap}
+.pass-table-row{cursor:pointer;transition:background .15s}
+.pass-table-row:hover td{background:rgba(255,255,255,0.04)}
+.info-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.info-tab{
+  padding:8px 14px;border-radius:99px;font-size:13px;font-weight:600;
+  border:1px solid var(--border);background:rgba(255,255,255,0.04);
+  color:var(--text-secondary);cursor:pointer;font-family:inherit;
+  transition:all .15s;
+}
+.info-tab.act{background:var(--accent-light);border-color:var(--accent-border);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -403,7 +454,7 @@ textarea.inp{resize:vertical;min-height:80px}
       </div>
     </div>
     <div id="snav" class="space-y-0.5 flex-1"></div>
-    <div class="sidebar-footer">Powered by Claude AI · v3 kunskap</div>
+    <div class="sidebar-footer">Powered by Claude AI · v4 rekommendationer</div>
   </aside>
 
   <!-- Main -->
@@ -434,7 +485,7 @@ textarea.inp{resize:vertical;min-height:80px}
 // STATE
 // ──────────────────────────────────────────────
 const SK = 'tdbok-v4';
-function fresh(){return{user:{name:'',age:null,rhr:null,mhr:null},goal:null,workouts:[],last:null};}
+function fresh(){return{user:{name:'',age:null,rhr:null,mhr:null,level:null,ppw:null},goal:null,workouts:[],last:null};}
 function loadState(){
   try{
     const raw=JSON.parse(localStorage.getItem(SK)||'{}');
@@ -468,16 +519,16 @@ function aiStatusMsg(){
 // ──────────────────────────────────────────────
 // ROUTING
 // ──────────────────────────────────────────────
-let V='dash',VP={},CX={},INFO_OPEN=null;
+let V='dash',VP={},CX={},INFO_OPEN=null,INFO_TAB='kunskap';
 
-function go(v,p){V=v;VP=p||{};if(v==='info'&&!p?.keepInfo)INFO_OPEN=null;killCharts();render();document.getElementById('content').scrollTop=0;}
+function go(v,p){V=v;VP=p||{};if(v==='info'){if(p?.tab)INFO_TAB=p.tab;if(!p?.keepInfo&&!p?.pass)INFO_OPEN=null;}else INFO_OPEN=null;killCharts();render();document.getElementById('content').scrollTop=0;if(v==='info'&&p?.pass){const pk={lugnt:'distans'}[p.pass]||p.pass;setTimeout(()=>document.getElementById('pass-'+pk)?.scrollIntoView({behavior:'smooth',block:'center'}),80);}}
 
 const NAVS=[
   {id:'dash',icon:'home',lbl:'Hem'},
   {id:'log',icon:'plus',lbl:'Logga'},
   {id:'hist',icon:'chart',lbl:'Historik'},
   {id:'goal',icon:'target',lbl:'Mål'},
-  {id:'plan',icon:'calendar',lbl:'Veckoplan'},
+  {id:'plan',icon:'star',lbl:'Rekommend.'},
   {id:'info',icon:'book',lbl:'Kunskap'},
   {id:'ai',icon:'bot',lbl:'AI Analys'},
   {id:'prof',icon:'user',lbl:'Profil'},
@@ -553,15 +604,254 @@ function ico(name,sz=18,col){
 function ticon(t,sz=22){return ico({löpning:'run',cykling:'bike',simning:'swim',gym:'dumbbell',promenad:'walk',skidor:'ski',annat:'zap'}[t]||'zap',sz);}
 function gicon(t,sz=36){return ico({maraton:'medal',halvmaraton:'trophy','10k':'flag','5k':'flag',cykling:'bike',anpassad:'star'}[t]||'target',sz);}
 const PASSTYPER=[
-  {v:'lugnt',l:'Lugnt / Återhämtning'},
+  {v:'distans',l:'Distans'},
   {v:'langpass',l:'Långpass'},
-  {v:'tempo',l:'Tempo / Tröskel'},
   {v:'intervaller',l:'Intervaller'},
+  {v:'tempo',l:'Tröskelpass'},
+  {v:'backintervaller',l:'Backintervaller'},
+  {v:'aterhamtning',l:'Återhämtningspass'},
   {v:'tavling',l:'Tävling'},
 ];
-function pLabel(p){return PASSTYPER.find(x=>x.v===p)?.l||'';}
+function pLabel(p){
+  if(p==='lugnt')return'Distans';
+  return PASSTYPER.find(x=>x.v===p)?.l||'';
+}
 function passtypOpts(sel){
   return PASSTYPER.map(p=>`<option value="${p.v}"${sel===p.v?' selected':''}>${p.l}</option>`).join('');
+}
+
+// ──────────────────────────────────────────────
+// PERSONLIGA REKOMMENDATIONER
+// ──────────────────────────────────────────────
+const LEVELS={
+  nyborjare:{label:'Nybörjare',desc:'Du har löpt lite eller nyligen kommit igång.'},
+  motionar:{label:'Motionär',desc:'Du tränar regelbundet och känner dig bekväm med distans och tempo.'},
+  avancerad:{label:'Avancerad',desc:'Du har flera års erfarenhet och tål högre träningsvolym.'},
+};
+
+const PASS_BIB=[
+  {key:'distans',logKey:'distans',label:'Distans',audience:'Alla',icon:'heart',zone:2,
+   purpose:'Bygga uthållighet',
+   examples:'30–60 min i bekväm fart där du kan prata i hela meningar.'},
+  {key:'langpass',logKey:'langpass',label:'Långpass',audience:'Alla',icon:'run',zone:2,
+   purpose:'Uthållighet',
+   examples:'Längre än dina vanliga pass, i lugn takt. Längden anpassas efter din nivå och mål.'},
+  {key:'intervaller',logKey:'intervaller',label:'Intervaller',audience:'Medel/Avancerad',icon:'wind',zone:5,
+   purpose:'VO₂max och fart',
+   examples:'Kortare snabba partier med joggvila – längd och antal efter din form.'},
+  {key:'tempo',logKey:'tempo',label:'Tröskelpass',audience:'Medel/Avancerad',icon:'zap',zone:4,
+   purpose:'Förbättra mjölksyratröskeln',
+   examples:'20–40 min i jämn, utmanande fart, eller kortare block med kort vila.'},
+  {key:'backintervaller',logKey:'backintervaller',label:'Backintervaller',audience:'Medel/Avancerad',icon:'trending',zone:4,
+   purpose:'Styrka och löpekonomi',
+   examples:'Korta backar i hård fart med jogg ned – antal och längd efter terräng och form.'},
+  {key:'aterhamtning',logKey:'aterhamtning',label:'Återhämtningspass',audience:'Alla',icon:'moon',zone:1,
+   purpose:'Aktiv vila',
+   examples:'20–40 min mycket lätt – du ska känna dig piggare efteråt, inte tröttare.'},
+];
+
+const GUIDE_BY_LEVEL={
+  nyborjare:{
+    title:'Råd för nybörjare',
+    tips:[
+      'Prioritera regelbundenhet framför fart – 2–3 pass i veckan räcker länge.',
+      'Håll de flesta passen lugna – du ska kunna prata utan att flåsa.',
+      'Öka distansen långsamt – max 5–10 % per vecka.',
+      'Vila är träning – kroppen blir starkare i vila, inte bara under passen.',
+    ],
+  },
+  motionar:{
+    title:'Råd för motionärer',
+    tips:[
+      'Balansera lugna pass med 1–2 kvalitetspass per vecka.',
+      'Ett längre pass i veckan ger uthållighet inför 10 km och halvmaraton.',
+      'Lyssna på kroppen – en extra vilodag slår ett pass du tvingar igenom.',
+      'Variera underlag och terräng för att minska slitage på samma muskler.',
+    ],
+  },
+  avancerad:{
+    title:'Råd för erfarna löpare',
+    tips:[
+      'Planera hårdare pass med återhämtning runt om – undvik flera tunga pass i rad.',
+      'Långpass och tröskel är grunden inför halvmaraton och maraton.',
+      'Schemalägg en lättare vecka ungefär var fjärde vecka.',
+      'Logga hur passen känns (RPE) – det avslöjar mönster som bara distans inte visar.',
+    ],
+  },
+};
+
+function passDef(key){
+  const alias={lugnt:'distans',tavling:'intervaller'}[key]||key;
+  return PASS_BIB.find(p=>p.key===alias||p.logKey===key)||PASS_BIB[0];
+}
+function goalCategory(type){
+  if(type==='5k')return'short';
+  if(type==='10k')return'medium';
+  if(type==='halvmaraton'||type==='maraton')return'long';
+  return'general';
+}
+function profileReady(){return!!(S.user.level&&S.user.ppw);}
+
+function baseWeeklyMix(level,ppw,goalCat){
+  const n=Math.max(2,Math.min(7,ppw||3));
+  const mix=[];
+  if(level==='nyborjare'){
+    if(n<=2)return['lugnt','lugnt'];
+    if(n===3)return['lugnt','lugnt','lugnt'];
+    mix.push('lugnt','lugnt');
+    if(n>=4)mix.push('langpass');
+    while(mix.length<n)mix.push('lugnt');
+    return mix.slice(0,n);
+  }
+  const easy=Math.max(1,Math.ceil(n*0.55));
+  for(let i=0;i<easy;i++)mix.push('lugnt');
+  if(goalCat==='long'&&n>=3)mix.push('langpass');
+  else if(goalCat!=='short'&&n>=4)mix.push('langpass');
+  if(level==='avancerad'&&n>=4){
+    mix.push('intervaller');
+    if(n>=5)mix.push('tempo');
+  }else if(n>=3){
+    mix.push(goalCat==='short'?'intervaller':'tempo');
+  }
+  while(mix.length<n)mix.push('lugnt');
+  return mix.slice(0,n);
+}
+
+function historyInsights(ws,prev){
+  const tips=[];
+  const doneTypes=new Set(ws.list.filter(w=>w.passtyp).map(w=>w.passtyp));
+  const hard=ws.list.filter(w=>['intervaller','tempo','backintervaller','tavling'].includes(w.passtyp));
+  const easy=ws.list.filter(w=>['lugnt','distans','aterhamtning','langpass'].includes(w.passtyp));
+  const r0=avgRpe(ws.list),r1=avgRpe(prev.list);
+  if(r0!==null&&r0>=8)tips.push('Hög upplevd ansträngning den här veckan – prioritera återhämtning.');
+  if(r0!==null&&r1!==null&&r0>r1+0.8)tips.push('Passen känns tyngre än förra veckan. Ett extra lugnt pass kan hjälpa.');
+  if(hard.length>=2&&easy.length===0)tips.push('Flera hårda pass utan lugna emellan – balansera med ett distanspass i bekväm fart.');
+  if(ws.n===0&&prev.n>=3)tips.push('Inga pass loggade än den här veckan – börja gärna med ett lugnt pass.');
+  if(ws.n>=S.user.ppw)tips.push('Du har nått ditt veckomål för antal pass – vila eller håll det lugnt om kroppen känns trött.');
+  return{doneTypes,hardCount:hard.length,tips};
+}
+
+function getPersonalRecommendations(){
+  const u=S.user,g=S.goal,ws=wstats(0),prev=wstats(1);
+  const level=u.level,ppw=u.ppw||3;
+  const goalCat=g?goalCategory(g.type):'general';
+  const hist=historyInsights(ws,prev);
+
+  if(!level||!ppw){
+    return{
+      ready:false,
+      headline:'Fyll i profil för personliga råd',
+      summary:'Berätta om din erfarenhet och hur många pass du vill träna per vecka – då kan vi föreslå en vecka anpassad efter dig.',
+      sessions:[],tips:[],
+    };
+  }
+
+  let mix=baseWeeklyMix(level,ppw,goalCat);
+  if(hist.hardCount>=2)mix=mix.map(t=>(t==='intervaller'||t==='tempo')?'lugnt':t);
+  if(hist.doneTypes.has('intervaller'))mix=mix.map(t=>t==='intervaller'?'tempo':t);
+  if(hist.doneTypes.has('tempo'))mix=mix.map(t=>t==='tempo'?'lugnt':t);
+  if(hist.doneTypes.has('langpass'))mix=mix.filter(t=>t!=='langpass');
+  const counts={};
+  mix.forEach(t=>{counts[t]=(counts[t]||0)+1;});
+  const sessions=Object.entries(counts).map(([key,count])=>{
+    const def=passDef(key);
+    const matchKeys={lugnt:['lugnt','distans'],langpass:['langpass'],tempo:['tempo'],intervaller:['intervaller','tavling']}[key]||[key];
+    const done=ws.list.filter(w=>matchKeys.includes(w.passtyp)).length;
+    const remaining=Math.max(0,count-done);
+    let reason='';
+    if(goalCat==='long'&&key==='langpass')reason='Ditt mål kräver uthållighet – ett längre lugnt pass bygger det.';
+    else if(key==='intervaller'&&goalCat==='short')reason='Kortare lopp som 5 km gynnas av fart och syreupptag.';
+    else if(key==='tempo')reason='Tröskelpass höjer farten du kan hålla under längre tid.';
+    else if(key==='lugnt')reason='Det mesta av träningen bör vara lugn – det ger bas och återhämtning.';
+    else if(key==='langpass')reason='Ett längre pass i lugn takt stärker uthålligheten.';
+    return{key,count,remaining,done,def,reason,doneThisWeek:done>=count};
+  }).sort((a,b)=>{
+    const ord={langpass:0,tempo:1,intervaller:2,lugnt:3,tavling:4};
+    return(ord[a.key]??9)-(ord[b.key]??9);
+  });
+
+  const pending=sessions.filter(s=>!s.doneThisWeek);
+  const labels=pending.map(s=>{
+    const lbl=s.def.label.toLowerCase();
+    return s.remaining>1?`${s.remaining} ${lbl}`:lbl;
+  });
+  let summary='';
+  if(ws.n>=ppw&&sessions.every(s=>s.doneThisWeek)){
+    summary='Bra jobbat – du har täckt veckans rekommenderade pass. Vila eller håll det lugnt om du känner dig trött.';
+  }else if(labels.length){
+    const list=labels.length===1?labels[0]:labels.slice(0,-1).join(', ')+' och '+labels.slice(-1);
+    summary=`Den här veckan rekommenderar vi ${list}. Anpassa längd och intensitet efter hur du mår.`;
+  }else{
+    summary='Du har redan gjort det mesta av veckans rekommenderade pass – ett extra lugnt pass räcker om du vill röra på dig.';
+  }
+
+  const goalLabel=g?g.desc:(LEVELS[level]?.label||'din nivå');
+  const headline=`Vecka anpassad för ${goalLabel}`;
+
+  const tips=[...hist.tips];
+  if(g&&daysTo(g.tgt)>0&&daysTo(g.tgt)<=21&&level!=='nyborjare'){
+    tips.push('Du närmar dig måldatum – håll kvalitetspassen men skär inte på vila och återhämtning.');
+  }
+  if(level==='nyborjare'&&ppw>=4){
+    tips.push('Som nybörjare räcker det ofta med 2–3 pass – fler pass ska fortfarande vara lugna.');
+  }
+
+  return{ready:true,headline,summary,sessions,tips,level,ppw,goalCat,ws};
+}
+
+function renderRecSession(s,compact){
+  const def=s.def;
+  const done=s.doneThisWeek;
+  const tag=done
+    ?`<span class="rec-tag rec-tag-done">${ico('check',10)} Loggat</span>`
+    :`<span class="rec-tag rec-tag-suggest">${s.remaining>1?s.remaining+'× ':''}Förslag</span>`;
+  const logKey=def.logKey||s.key;
+  const logBtn=done?'':`<button onclick="go('log',{prefill:{passtyp:'${logKey}',pz:${def.zone}}})" class="link-btn" style="margin-top:6px;font-size:12px">Logga pass →</button>`;
+  const infoBtn=`<button onclick="go('info',{tab:'pass',pass:'${def.key}'})" class="link-btn" style="margin-top:6px;font-size:12px;margin-left:10px">Läs mer</button>`;
+  if(compact){
+    return`<div class="rec-session${done?' done':''}" style="padding:12px 14px">
+      <div class="rec-session-icon ${def.zone?' '+zcls(def.zone):''}" style="${!def.zone?'background:var(--surface-muted)':''}">${ico(def.icon,18)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span style="font-weight:600;color:var(--text);font-size:14px">${def.label}</span>${tag}
+        </div>
+        ${done?'':`<p style="font-size:12px;color:var(--text-secondary);margin-top:4px;line-height:1.5">${s.reason}</p>`}
+      </div>
+    </div>`;
+  }
+  return`<div class="rec-session${done?' done':''}">
+    <div class="rec-session-icon ${def.zone?' '+zcls(def.zone):''}" style="${!def.zone?'background:var(--surface-muted)':''}">${ico(def.icon,20)}</div>
+    <div style="flex:1;min-width:0">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span style="font-weight:600;color:var(--text);font-size:15px">${def.label}</span>${tag}
+        ${def.zone?`<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${zcls(def.zone)}">Z${def.zone}</span>`:''}
+      </div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-top:6px;line-height:1.55">${def.purpose}</p>
+      ${done?'':`<p style="font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.5"><em>${s.reason}</em></p>`}
+      <p style="font-size:12px;color:#c7d2fe;margin-top:8px;line-height:1.5">Exempel: ${def.examples}</p>
+      ${done?'':`<div>${logBtn}${infoBtn}</div>`}
+    </div>
+  </div>`;
+}
+
+function renderRecCard(compact){
+  const rec=getPersonalRecommendations();
+  if(!rec.ready){
+    return`<div class="card rec-hero p-5 fade-in">
+      <div class="flex items-center gap-2 mb-2">${ico('star',18,'var(--accent)')}<span style="font-weight:600;color:var(--text);font-size:14px">Personliga rekommendationer</span></div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px">${rec.summary}</p>
+      <button onclick="go('prof')" class="btn btn-p" style="padding:9px 16px;font-size:13px;gap:6px">${ico('user',14)} Fyll i profil</button>
+    </div>`;
+  }
+  const pending=rec.sessions.filter(s=>!s.doneThisWeek);
+  return`<div class="card rec-hero p-5 fade-in">
+    <div class="flex items-center justify-between gap-2 mb-2">
+      <div class="flex items-center gap-2">${ico('star',18,'var(--accent)')}<span style="font-weight:600;color:var(--text);font-size:14px">Den här veckan</span></div>
+      <button onclick="go('plan')" class="link-btn">Visa alla →</button>
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">${rec.summary}</p>
+    <div class="space-y-2">${(compact?pending.slice(0,3):pending).map(s=>renderRecSession(s,true)).join('')||`<p style="font-size:13px;color:var(--success);font-weight:600">${ico('check',14)} Veckans pass är genomförda!</p>`}</div>
+  </div>`;
 }
 
 function wstats(ago){
@@ -590,8 +880,8 @@ function weekTrendInsight(cur,prev){
   if(r0!==null&&r1!==null&&r0<=r1-0.4)return{text:'Du återhämtar dig bättre än förra veckan.',sub:'Lägre upplevd ansträngning i snitt den här veckan.'};
   if(cur.km>0&&prev.km>0&&cur.km>=prev.km*1.08)return{text:'Du springer mer än förra veckan!',sub:`${cur.km.toFixed(1)} km den här veckan mot ${prev.km.toFixed(1)} km förra.`};
   if(cur.n>prev.n&&prev.n>0)return{text:'Fler pass än förra veckan',sub:`${cur.n} pass hittills – förra veckan blev det ${prev.n}.`};
-  const rec=cur.list.filter(w=>w.passtyp==='lugnt').length;
-  const recP=prev.list.filter(w=>w.passtyp==='lugnt').length;
+  const rec=cur.list.filter(w=>['lugnt','distans','aterhamtning'].includes(w.passtyp)).length;
+  const recP=prev.list.filter(w=>['lugnt','distans','aterhamtning'].includes(w.passtyp)).length;
   if(rec>recP&&rec>=2)return{text:'Bra balans med återhämtning',sub:`${rec} lugna pass den här veckan – kroppen får tid att bygga sig starkare.`};
   if(cur.n>=3)return{text:'Stabil träningsvecka',sub:`${cur.km.toFixed(1)} km och ${cur.n} pass – håll tempot.`};
   return null;
@@ -774,6 +1064,8 @@ function vDash(){
     <div class="dash-body">
       <div class="dash-body-inner space-y-4">
 
+    ${renderRecCard(true)}
+
     <div class="card p-5 fade-in" style="border:1px solid var(--accent-border);background:rgba(99,102,241,0.08)">
       <div class="flex items-center justify-between gap-3">
         <div>
@@ -803,7 +1095,7 @@ function vDash(){
     ${!S.goal&&!S.user.name?`
     <div class="card insight-card p-5 fade-in">
       <div style="font-weight:700;color:var(--text);margin-bottom:6px">Välkommen!</div>
-      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Börja med att sätta upp din profil och ditt träningsmål för att få personlig AI-feedback.</p>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px">Börja med att sätta upp din profil (erfarenhet och pass/vecka) och ditt träningsmål för personliga rekommendationer och AI-feedback.</p>
       <div class="flex gap-2 flex-wrap">
         <button onclick="go('prof')" class="btn btn-p" style="padding:9px 18px;font-size:13px;gap:6px">${ico('user',14)} Profil</button>
         <button onclick="go('goal')" class="btn btn-s" style="padding:9px 18px;font-size:13px;gap:6px">${ico('target',14)} Sätt mål</button>
@@ -1405,43 +1697,68 @@ function doGoal(e){
 }
 
 // ──────────────────────────────────────────────
-// WEEKLY PLAN
+// PERSONLIGA REKOMMENDATIONER (VY)
 // ──────────────────────────────────────────────
-const VECKOPLAN=[
-  {day:'Måndag',act:'Vila'},
-  {day:'Tisdag',act:'Intervaller',z:5},
-  {day:'Onsdag',act:'Lugn distans',z:2},
-  {day:'Torsdag',act:'Tröskel',z:4},
-  {day:'Fredag',act:'Vila'},
-  {day:'Lördag',act:'Långpass',z:2},
-  {day:'Söndag',act:'Återhämtning',z:1},
-];
-
 function vPlan(){
-  const todayIdx=(new Date().getDay()+6)%7;
-  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
-    <h1 class="page-title" style="margin-bottom:4px">Veckoplan</h1>
-    <p class="page-subtitle" style="margin-bottom:20px">Ett balanserat exempel på hur en träningsvecka kan se ut.</p>
+  const rec=getPersonalRecommendations();
+  const u=S.user;
 
-    <div class="card overflow-hidden mb-4 fade-in" style="padding:0">
-      ${VECKOPLAN.map((p,i)=>{
-        const isToday=i===todayIdx;
-        return `
-        <div class="flex items-center gap-3 row-hover transition-colors" style="padding:16px 18px;${i<VECKOPLAN.length-1?'border-bottom:1px solid var(--border-light)':''}${isToday?';background:rgba(99,102,241,0.1)':''}">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${p.z?' '+zcls(p.z):''}" style="${!p.z?'background:var(--surface-muted);color:var(--text-muted)':''};font-size:13px;font-weight:700">
-            ${p.z?'Z'+p.z:ico('calendar',16)}
-          </div>
-          <div class="flex-1 min-w-0">
-            <div style="font-weight:600;color:var(--text);font-size:14px">${p.day}${isToday?' <span style="font-size:11px;font-weight:600;color:var(--accent)">· Idag</span>':''}</div>
-            <div style="font-size:13px;color:var(--text-secondary);margin-top:2px">${p.act}</div>
-          </div>
-        </div>`;
-      }).join('')}
+  if(!rec.ready){
+    return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+      <h1 class="page-title" style="margin-bottom:4px">Personliga rekommendationer</h1>
+      <p class="page-subtitle" style="margin-bottom:20px">Råd baserade på ditt mål, din nivå och träningshistorik – inte en fast plan för alla.</p>
+      <div class="card rec-hero p-6 text-center fade-in">
+        <div style="margin-bottom:14px;color:var(--accent);opacity:0.6;display:flex;justify-content:center">${ico('star',48)}</div>
+        <p style="font-size:14px;color:var(--text-secondary);line-height:1.65;margin-bottom:18px">${rec.summary}</p>
+        <div class="flex gap-2 justify-center flex-wrap">
+          <button onclick="go('prof')" class="btn btn-p" style="padding:10px 18px;font-size:13px;gap:6px">${ico('user',14)} Fyll i profil</button>
+          ${!S.goal?`<button onclick="go('goal')" class="btn btn-s" style="padding:10px 18px;font-size:13px;gap:6px">${ico('target',14)} Sätt mål</button>`:''}
+        </div>
+      </div>
+      <div class="card insight-card p-5 mt-4 fade-in">
+        <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">Vi ger principer och exempel – inte absoluta instruktioner som "alla ska springa 8×1000 m". Anpassa alltid efter hur du mår.</p>
+      </div>
+      <div style="height:24px"></div>
+    </div>`;
+  }
+
+  const doneCount=rec.sessions.filter(s=>s.doneThisWeek).length;
+  const totalCount=rec.sessions.length;
+
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <h1 class="page-title" style="margin-bottom:4px">Personliga rekommendationer</h1>
+    <p class="page-subtitle" style="margin-bottom:20px">Anpassat efter ${LEVELS[u.level]?.label.toLowerCase()||'din nivå'}, ${u.ppw} pass/vecka${S.goal?' och '+S.goal.desc:''}.</p>
+
+    <div class="card rec-hero p-5 mb-4 fade-in">
+      <div class="lbl" style="color:var(--accent)">${ico('star',12)} Veckans fokus</div>
+      <div style="font-size:17px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:8px">${rec.headline}</div>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">${rec.summary}</p>
+      <div class="hero-spotlight-meta" style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1)">
+        <div class="flex justify-between" style="font-size:12px;color:var(--text-secondary);margin-bottom:6px">
+          <span>Genomfört denna vecka</span>
+          <span style="font-weight:700;color:var(--text)">${doneCount} / ${totalCount} passtyper</span>
+        </div>
+        <div class="pbar"><div class="pfill" style="width:${totalCount?Math.round(doneCount/totalCount*100):0}%"></div></div>
+      </div>
     </div>
 
-    <div class="card insight-card p-5 fade-in">
-      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:12px">Detta är ett exempel. Anpassa efter din nivå och återhämtning.</p>
-      <button onclick="go('info')" class="link-btn">Läs mer om pulszoner och återhämtning →</button>
+    <div class="lbl">Rekommenderade pass</div>
+    <div class="space-y-3 mb-4">
+      ${rec.sessions.map(s=>renderRecSession(s,false)).join('')}
+    </div>
+
+    ${rec.tips.length?`
+    <div class="card insight-card p-5 mb-4 fade-in">
+      <div class="lbl" style="margin-bottom:8px">${ico('alert',12)} Att tänka på</div>
+      <ul class="info-list">${rec.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+    </div>`:''}
+
+    <div class="card p-5 fade-in">
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:12px">Detta är vägledning, inte ett facit. Vill du förstå syftet bakom varje passtyp?</p>
+      <div class="flex gap-3 flex-wrap">
+        <button onclick="go('info',{tab:'pass'})" class="link-btn">Pass-bibliotek →</button>
+        <button onclick="go('info',{tab:'guide'})" class="link-btn">Träningsguide →</button>
+      </div>
     </div>
     <div style="height:24px"></div>
   </div>`;
@@ -1561,10 +1878,83 @@ function renderInfoSection(s,col){
 }
 
 function vInfo(){
-  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
-    <h1 class="page-title" style="margin-bottom:4px">Kunskap</h1>
-    <p class="page-subtitle" style="margin-bottom:20px">Förstå pulszoner, tröskel och återhämtning – så blir träningsdagboken mer än bara en loggbok.</p>
+  const tab=VP.tab||INFO_TAB||'kunskap';
+  INFO_TAB=tab;
+  const level=S.user.level;
+  const guide=level?GUIDE_BY_LEVEL[level]:null;
+  const highlightPass=VP.pass||INFO_OPEN;
 
+  const tabs=[
+    {id:'guide',lbl:'Träningsguide'},
+    {id:'pass',lbl:'Pass-bibliotek'},
+    {id:'kunskap',lbl:'Fördjupning'},
+  ];
+
+  let body='';
+  if(tab==='guide'){
+    body=`
+    <p class="page-subtitle" style="margin-bottom:16px">Principer för nybörjare, motionärer och avancerade – utan att låtsas ersätta en personlig tränare.</p>
+    ${guide?`
+    <div class="card rec-hero p-5 mb-4 fade-in">
+      <div class="lbl" style="color:var(--accent)">Din nivå</div>
+      <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px">${guide.title}</div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;line-height:1.55">${LEVELS[level].desc}</p>
+      <ul class="info-list info-list-check">${guide.tips.map(t=>`<li><span class="info-check">${ico('check',14,'var(--accent)')}</span>${t}</li>`).join('')}</ul>
+    </div>`:`
+    <div class="card insight-card p-5 mb-4 fade-in">
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:14px">Välj erfarenhetsnivå i profilen så markeras råden som passar dig.</p>
+      <button onclick="go('prof')" class="btn btn-s" style="padding:9px 16px;font-size:13px;gap:6px">${ico('user',14)} Gå till profil</button>
+    </div>`}
+    <div class="lbl">Alla nivåer</div>
+    <div class="space-y-3">
+      ${Object.entries(GUIDE_BY_LEVEL).map(([k,g])=>`
+        <div class="card p-5 fade-in${k===level?';border:1px solid var(--accent-border);background:rgba(99,102,241,0.06)':''}">
+          <div style="font-weight:600;color:var(--text);font-size:15px;margin-bottom:4px">${g.title}${k===level?' <span style="font-size:11px;color:var(--accent)">· Din nivå</span>':''}</div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">${LEVELS[k].desc}</p>
+          <ul class="info-list">${g.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+        </div>
+      `).join('')}
+    </div>`;
+  }else if(tab==='pass'){
+    body=`
+    <p class="page-subtitle" style="margin-bottom:8px">Jag tycker absolut att du kan ha en sektion med olika typer av pass.</p>
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:16px">Det behöver inte vara ett schema – mer en kunskapsbank.</p>
+
+    <div class="lbl" style="margin-bottom:10px">Exempel</div>
+    <div class="card mb-5 fade-in" style="padding:0;overflow:hidden">
+      <table class="pass-table">
+        <thead><tr><th>Passtyp</th><th>Syfte</th><th>För vem</th></tr></thead>
+        <tbody>
+          ${PASS_BIB.map(p=>`
+            <tr class="pass-table-row" onclick="document.getElementById('pass-${p.key}')?.scrollIntoView({behavior:'smooth',block:'center'})">
+              <td>${p.label}</td>
+              <td>${p.purpose}</td>
+              <td>${p.audience}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="lbl">Fördjupning</div>
+    <div class="space-y-3">
+      ${PASS_BIB.map(p=>`
+        <div class="pass-card fade-in${highlightPass===p.key||highlightPass===p.logKey?';border-color:var(--accent-border);background:rgba(99,102,241,0.08)':''}" id="pass-${p.key}">
+          <div class="flex items-start gap-3">
+            <div class="rec-session-icon ${p.zone?' '+zcls(p.zone):''}" style="${!p.zone?'background:var(--surface-muted)':''}">${ico(p.icon,20)}</div>
+            <div style="flex:1">
+              <div class="pass-card-title">${p.label}${p.zone?` <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${zcls(p.zone)}">Z${p.zone}</span>`:''}</div>
+              <p class="pass-card-purpose">${p.purpose} · ${p.audience}</p>
+              <p class="pass-card-example"><strong style="color:var(--text-secondary);font-weight:600">Exempel:</strong> ${p.examples}</p>
+              <button onclick="go('log',{prefill:{passtyp:'${p.logKey}',pz:${p.zone||2}}})" class="link-btn" style="margin-top:10px;font-size:12px">Logga ${p.label.toLowerCase()} →</button>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  }else{
+    body=`
+    <p class="page-subtitle" style="margin-bottom:16px">Förstå pulszoner, tröskel och återhämtning – så blir träningsdagboken mer än bara en loggbok.</p>
     <div class="space-y-3">
       ${INFO_CARDS.map((c,i)=>`
         <div class="info-card card fade-in${INFO_OPEN===c.id?' open':''}" style="border-left:3px solid ${c.color};animation-delay:${i*40}ms">
@@ -1579,14 +1969,24 @@ function vInfo(){
           </div>
         </div>
       `).join('')}
+    </div>`;
+  }
+
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <h1 class="page-title" style="margin-bottom:4px">Kunskap</h1>
+
+    <div class="info-tabs">
+      ${tabs.map(t=>`<button class="info-tab${tab===t.id?' act':''}" onclick="go('info',{tab:'${t.id}'})">${t.lbl}</button>`).join('')}
     </div>
+
+    ${body}
     <div style="height:24px"></div>
   </div>`;
 }
 
 function toggleInfo(id){
   INFO_OPEN=INFO_OPEN===id?null:id;
-  if(V!=='info'){go('info',{keepInfo:true});return;}
+  if(V!=='info'){go('info',{tab:'kunskap',keepInfo:true});return;}
   render();
 }
 
@@ -1698,6 +2098,27 @@ function vProf(){
       </div>
 
       <div class="card p-5">
+        <div class="lbl">Träning & rekommendationer</div>
+        <p style="font-size:12px;color:var(--text-secondary);line-height:1.55;margin-bottom:14px">Används för personliga veckoråd – tillsammans med ditt mål och träningshistorik.</p>
+        <div class="space-y-3">
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Erfarenhet</label>
+            <select name="level" class="inp">
+              <option value="">Välj nivå</option>
+              ${Object.entries(LEVELS).map(([k,l])=>`<option value="${k}"${u.level===k?' selected':''}>${l.label}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:5px">Antal pass per vecka</label>
+            <select name="ppw" class="inp">
+              <option value="">Välj antal</option>
+              ${[2,3,4,5,6,7].map(n=>`<option value="${n}"${u.ppw===n?' selected':''}>${n} pass / vecka</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
         <div class="lbl" style="display:flex;align-items:center;gap:6px">${ico('bot',12)} AI</div>
         <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:0">AI-analys körs via servern. Du behöver inte lägga in någon API-nyckel i appen – nyckeln ligger säkert på servern.</p>
         ${AI_SERVER===true?`<div style="font-size:12px;color:var(--success);margin-top:10px;font-weight:600">${aiStatusMsg()}</div>`:AI_SERVER===false?`<div style="font-size:12px;color:var(--warning);margin-top:10px;font-weight:600;line-height:1.5">${aiStatusMsg()}</div>`:''}
@@ -1748,9 +2169,11 @@ function doProf(e){
     name:g('name'),
     age:parseInt(g('age'))||null,
     rhr:parseInt(g('rhr'))||null,
-    mhr:parseInt(g('mhr'))||null
+    mhr:parseInt(g('mhr'))||null,
+    level:g('level')||null,
+    ppw:parseInt(g('ppw'))||null,
   };
-  save();toast('Inställningar sparade ✓');go('dash');
+  save();toast('Inställningar sparade ✓');go('plan');
 }
 
 // ──────────────────────────────────────────────
