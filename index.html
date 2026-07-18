@@ -315,7 +315,7 @@ textarea.inp{resize:vertical;min-height:80px}
   font-family:inherit;text-align:left;
 }
 .info-card-header:hover{background:rgba(255,255,255,0.03)}
-.info-emoji{font-size:22px;line-height:1;flex-shrink:0}
+.info-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:24px;height:24px}
 .info-title{flex:1;font-size:15px;font-weight:600;color:var(--text)}
 .info-chevron{color:var(--text-muted);transition:transform .2s;flex-shrink:0}
 .info-card-body{display:none;padding:0 18px 18px}
@@ -329,6 +329,9 @@ textarea.inp{resize:vertical;min-height:80px}
   padding:4px 0 4px 16px;position:relative;
 }
 .info-list li::before{content:'•';position:absolute;left:0;color:var(--accent)}
+.info-list-check li{display:flex;align-items:flex-start;gap:8px;padding-left:0}
+.info-list-check li::before{display:none}
+.info-check{flex-shrink:0;margin-top:2px}
 .info-text{font-size:13px;color:var(--text-secondary);line-height:1.6}
 .info-rec{
   font-size:13px;color:#c7d2fe;line-height:1.6;
@@ -469,7 +472,7 @@ function MHR(){return S.user.mhr||(S.user.age?220-S.user.age:190);}
 function zone(hr){const m=MHR(),p=(hr/m)*100;if(p<60)return 1;if(p<70)return 2;if(p<80)return 3;if(p<90)return 4;return 5;}
 function zcls(z){return['','z1','z2','z3','z4','z5'][z]||'';}
 function zcol(z){return['','#10b981','#06b6d4','#f59e0b','#f97316','#ef4444'][z]||'#6b7280';}
-function ico(name,sz=18){
+function ico(name,sz=18,col){
   const d={
     home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
     plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
@@ -497,8 +500,14 @@ function ico(name,sz=18){
     activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
     book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
     chev:'<polyline points="6 9 12 15 18 9"/>',
+    heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>',
+    wind:'<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>',
+    moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+    trending:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+    check:'<path d="M20 6 9 17l-5-5"/>',
   };
-  return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0">${d[name]||d.zap}</svg>`;
+  const colStyle=col?`color:${col};`:'';
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;${colStyle}">${d[name]||d.zap}</svg>`;
 }
 function ticon(t,sz=22){return ico({löpning:'run',cykling:'bike',simning:'swim',gym:'dumbbell',promenad:'walk',skidor:'ski',annat:'zap'}[t]||'zap',sz);}
 function gicon(t,sz=36){return ico({maraton:'medal',halvmaraton:'trophy','10k':'flag','5k':'flag',cykling:'bike',anpassad:'star'}[t]||'target',sz);}
@@ -603,7 +612,7 @@ function vDash(){
     <div class="card p-5 fade-in" style="border:1px solid var(--accent-border);background:rgba(99,102,241,0.08)">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <div style="font-weight:600;color:var(--text);font-size:14px">📚 Kunskapskort</div>
+          <div class="flex items-center gap-2" style="font-weight:600;color:var(--text);font-size:14px">${ico('book',18,'var(--accent)')} Kunskapskort</div>
           <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;line-height:1.5">Zon 2, tröskel, VO₂max, vila och säker progression</p>
         </div>
         <button onclick="go('info')" class="btn btn-p" style="padding:8px 14px;font-size:12px;flex-shrink:0;gap:5px">${ico('book',14)} Öppna</button>
@@ -1279,7 +1288,7 @@ function vPlan(){
 // ──────────────────────────────────────────────
 const INFO_CARDS=[
   {
-    id:'z2',emoji:'🫀',title:'Vad är Zon 2?',
+    id:'z2',icon:'heart',title:'Vad är Zon 2?',
     color:'#22d3ee',bg:'rgba(6,182,212,0.08)',
     intro:'Zon 2 är en lågintensiv träningszon där kroppen främst använder fett som bränsle och bygger upp den aeroba uthålligheten.',
     sections:[
@@ -1299,7 +1308,7 @@ const INFO_CARDS=[
     ],
   },
   {
-    id:'troskel',emoji:'⚡',title:'Vad är tröskelträning?',
+    id:'troskel',icon:'zap',title:'Vad är tröskelträning?',
     color:'#fb923c',bg:'rgba(249,115,22,0.08)',
     intro:'Tröskelträning innebär att springa i den högsta fart du kan hålla under en längre tid utan att mjölksyran byggs upp snabbare än kroppen hinner transportera bort den.',
     sections:[
@@ -1321,7 +1330,7 @@ const INFO_CARDS=[
     ],
   },
   {
-    id:'vo2',emoji:'🫁',title:'Vad är VO₂max?',
+    id:'vo2',icon:'wind',title:'Vad är VO₂max?',
     color:'#f87171',bg:'rgba(239,68,68,0.08)',
     intro:'VO₂max är kroppens maximala förmåga att ta upp och använda syre under hårt arbete. Ju högre VO₂max, desto bättre förutsättningar har du att prestera i konditionsidrotter.',
     sections:[
@@ -1345,7 +1354,7 @@ const INFO_CARDS=[
     ],
   },
   {
-    id:'vila',emoji:'😴',title:'Hur ofta ska man vila?',
+    id:'vila',icon:'moon',title:'Hur ofta ska man vila?',
     color:'#818cf8',bg:'rgba(99,102,241,0.08)',
     intro:'Vilan är när kroppen blir starkare. Träningen bryter ner kroppen – återhämtningen bygger upp den igen.',
     sections:[
@@ -1364,7 +1373,7 @@ const INFO_CARDS=[
     ],
   },
   {
-    id:'oka',emoji:'📈',title:'Hur ökar man träningsmängden säkert?',
+    id:'oka',icon:'trending',title:'Hur ökar man träningsmängden säkert?',
     color:'#34d399',bg:'rgba(16,185,129,0.08)',
     intro:'Den vanligaste orsaken till löparskador är att öka träningen för snabbt.',
     sections:[
@@ -1378,12 +1387,12 @@ const INFO_CARDS=[
   },
 ];
 
-function renderInfoSection(s){
+function renderInfoSection(s,col){
   if(s.type==='list')return`<div class="info-section"><div class="info-section-title">${s.title}</div><ul class="info-list">${s.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
   if(s.type==='text')return`<div class="info-section"><div class="info-section-title">${s.title}</div><p class="info-text">${s.text}</p></div>`;
   if(s.type==='rec')return`<div class="info-section"><div class="info-section-title">${s.title}</div><div class="info-rec">${s.text}</div></div>`;
   if(s.type==='levels')return`<div class="info-section"><div class="info-section-title">${s.title}</div><div class="info-grid">${s.items.map(l=>`<div class="info-level"><div class="info-level-name">${l.name}</div><div class="info-level-desc">${l.desc}</div></div>`).join('')}</div></div>`;
-  if(s.type==='rules')return`<div class="info-section"><div class="info-section-title">${s.title}</div><ul class="info-list">${s.items.map(i=>`<li>✅ ${i}</li>`).join('')}</ul></div>`;
+  if(s.type==='rules')return`<div class="info-section"><div class="info-section-title">${s.title}</div><ul class="info-list info-list-check">${s.items.map(i=>`<li><span class="info-check">${ico('check',14,col)}</span>${i}</li>`).join('')}</ul></div>`;
   return'';
 }
 
@@ -1396,13 +1405,13 @@ function vInfo(){
       ${INFO_CARDS.map((c,i)=>`
         <div class="info-card card fade-in${INFO_OPEN===c.id?' open':''}" style="border-left:3px solid ${c.color};animation-delay:${i*40}ms">
           <button class="info-card-header" onclick="toggleInfo('${c.id}')">
-            <span class="info-emoji">${c.emoji}</span>
+            <span class="info-icon">${ico(c.icon,24,c.color)}</span>
             <span class="info-title">${c.title}</span>
             <span class="info-chevron" style="${INFO_OPEN===c.id?'transform:rotate(180deg)':''}">${ico('chev',18)}</span>
           </button>
           <div class="info-card-body${INFO_OPEN===c.id?' open':''}">
             <p class="info-intro">${c.intro}</p>
-            ${c.sections.map(renderInfoSection).join('')}
+            ${c.sections.map(s=>renderInfoSection(s,c.color)).join('')}
           </div>
         </div>
       `).join('')}
