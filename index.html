@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Träningsdagbok AI</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -304,6 +305,44 @@ textarea.inp{resize:vertical;min-height:80px}
 .dash-body{padding:0 1rem 1.5rem}
 @media (min-width:768px){.dash-body{padding:0 2rem 2rem}}
 .dash-body-inner{max-width:680px;margin:0 auto}
+
+/* Info cards */
+.info-card{overflow:hidden;transition:box-shadow .2s}
+.info-card.open{box-shadow:var(--shadow-md)}
+.info-card-header{
+  display:flex;align-items:center;gap:12px;width:100%;
+  padding:16px 18px;border:none;background:transparent;cursor:pointer;
+  font-family:inherit;text-align:left;
+}
+.info-card-header:hover{background:rgba(255,255,255,0.03)}
+.info-emoji{font-size:22px;line-height:1;flex-shrink:0}
+.info-title{flex:1;font-size:15px;font-weight:600;color:var(--text)}
+.info-chevron{color:var(--text-muted);transition:transform .2s;flex-shrink:0}
+.info-card-body{display:none;padding:0 18px 18px}
+.info-card-body.open{display:block}
+.info-intro{font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:16px}
+.info-section{margin-bottom:14px}
+.info-section-title{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}
+.info-list{list-style:none;padding:0;margin:0}
+.info-list li{
+  font-size:13px;color:var(--text-secondary);line-height:1.55;
+  padding:4px 0 4px 16px;position:relative;
+}
+.info-list li::before{content:'•';position:absolute;left:0;color:var(--accent)}
+.info-text{font-size:13px;color:var(--text-secondary);line-height:1.6}
+.info-rec{
+  font-size:13px;color:#c7d2fe;line-height:1.6;
+  background:rgba(99,102,241,0.1);border:1px solid var(--accent-border);
+  border-radius:10px;padding:10px 14px;
+}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+@media(max-width:480px){.info-grid{grid-template-columns:1fr}}
+.info-level{
+  background:rgba(255,255,255,0.04);border:1px solid var(--border-light);
+  border-radius:10px;padding:10px 12px;
+}
+.info-level-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
+.info-level-desc{font-size:12px;color:var(--text-secondary);line-height:1.5}
 </style>
 </head>
 <body>
@@ -320,7 +359,7 @@ textarea.inp{resize:vertical;min-height:80px}
       </div>
     </div>
     <div id="snav" class="space-y-0.5 flex-1"></div>
-    <div class="sidebar-footer">Powered by Claude AI</div>
+    <div class="sidebar-footer">Powered by Claude AI · v3 kunskap</div>
   </aside>
 
   <!-- Main -->
@@ -385,9 +424,9 @@ function aiStatusMsg(){
 // ──────────────────────────────────────────────
 // ROUTING
 // ──────────────────────────────────────────────
-let V='dash',VP={},CX={};
+let V='dash',VP={},CX={},INFO_OPEN=null;
 
-function go(v,p){V=v;VP=p||{};killCharts();render();document.getElementById('content').scrollTop=0;}
+function go(v,p){V=v;VP=p||{};if(v==='info'&&!p?.keepInfo)INFO_OPEN=null;killCharts();render();document.getElementById('content').scrollTop=0;}
 
 const NAVS=[
   {id:'dash',icon:'home',lbl:'Hem'},
@@ -395,6 +434,7 @@ const NAVS=[
   {id:'hist',icon:'chart',lbl:'Historik'},
   {id:'goal',icon:'target',lbl:'Mål'},
   {id:'plan',icon:'calendar',lbl:'Veckoplan'},
+  {id:'info',icon:'book',lbl:'Kunskap'},
   {id:'ai',icon:'bot',lbl:'AI Analys'},
   {id:'prof',icon:'user',lbl:'Profil'},
 ];
@@ -413,7 +453,7 @@ function renderNav(){
 
 function render(){
   renderNav();
-  const fns={dash:vDash,log:vLog,det:()=>vDet(VP.id),edit:()=>vEdit(VP.id),hist:vHist,goal:vGoal,plan:vPlan,ai:vAI,prof:vProf};
+  const fns={dash:vDash,log:vLog,det:()=>vDet(VP.id),edit:()=>vEdit(VP.id),hist:vHist,goal:vGoal,plan:vPlan,info:vInfo,ai:vAI,prof:vProf};
   document.getElementById('content').innerHTML=(fns[V]||vDash)();
   setTimeout(initCharts,60);
 }
@@ -455,6 +495,8 @@ function ico(name,sz=18){
     alert:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
     save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',
     activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+    book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+    chev:'<polyline points="6 9 12 15 18 9"/>',
   };
   return `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0">${d[name]||d.zap}</svg>`;
 }
@@ -557,6 +599,16 @@ function vDash(){
 
     <div class="dash-body">
       <div class="dash-body-inner space-y-4">
+
+    <div class="card p-5 fade-in" style="border:1px solid var(--accent-border);background:rgba(99,102,241,0.08)">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div style="font-weight:600;color:var(--text);font-size:14px">📚 Kunskapskort</div>
+          <p style="font-size:12px;color:var(--text-secondary);margin-top:4px;line-height:1.5">Zon 2, tröskel, VO₂max, vila och säker progression</p>
+        </div>
+        <button onclick="go('info')" class="btn btn-p" style="padding:8px 14px;font-size:12px;flex-shrink:0;gap:5px">${ico('book',14)} Öppna</button>
+      </div>
+    </div>
 
     ${goalHtml}
     ${insHtml}
@@ -1215,10 +1267,154 @@ function vPlan(){
     </div>
 
     <div class="card insight-card p-5 fade-in">
-      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65">Detta är ett exempel. Anpassa efter din nivå och återhämtning.</p>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;margin-bottom:12px">Detta är ett exempel. Anpassa efter din nivå och återhämtning.</p>
+      <button onclick="go('info')" class="link-btn">Läs mer om pulszoner och återhämtning →</button>
     </div>
     <div style="height:24px"></div>
   </div>`;
+}
+
+// ──────────────────────────────────────────────
+// INFO CARDS
+// ──────────────────────────────────────────────
+const INFO_CARDS=[
+  {
+    id:'z2',emoji:'🫀',title:'Vad är Zon 2?',
+    color:'#22d3ee',bg:'rgba(6,182,212,0.08)',
+    intro:'Zon 2 är en lågintensiv träningszon där kroppen främst använder fett som bränsle och bygger upp den aeroba uthålligheten.',
+    sections:[
+      {title:'Fördelar',type:'list',items:[
+        'Förbättrar konditionen på lång sikt.',
+        'Gör att du orkar springa längre.',
+        'Hjälper kroppen att återhämta sig snabbare.',
+        'Minskar risken för överträning.',
+      ]},
+      {title:'Hur känns det?',type:'list',items:[
+        'Du kan föra en normal konversation.',
+        'Andningen är lugn.',
+        'Ansträngning: 3–4 av 10.',
+      ]},
+      {title:'Puls',type:'text',text:'Cirka 60–70 % av maxpulsen.'},
+      {title:'Rekommendation',type:'rec',text:'För de flesta löpare bör 70–80 % av all träning ske i zon 2.'},
+    ],
+  },
+  {
+    id:'troskel',emoji:'⚡',title:'Vad är tröskelträning?',
+    color:'#fb923c',bg:'rgba(249,115,22,0.08)',
+    intro:'Tröskelträning innebär att springa i den högsta fart du kan hålla under en längre tid utan att mjölksyran byggs upp snabbare än kroppen hinner transportera bort den.',
+    sections:[
+      {title:'Fördelar',type:'list',items:[
+        'Du kan springa snabbare under längre tid.',
+        'Förbättrar prestationsförmågan på 5 km, 10 km och halvmaraton.',
+        'Ökar uthålligheten vid hög fart.',
+      ]},
+      {title:'Hur känns det?',type:'list',items:[
+        'Du andas ansträngt.',
+        'Du kan säga några ord, men inte hålla en längre konversation.',
+        'Ansträngning: 7–8 av 10.',
+      ]},
+      {title:'Exempel',type:'list',items:[
+        '20–30 minuter i jämn fart.',
+        '3 × 10 minuter med 2 minuters joggvila.',
+      ]},
+      {title:'Rekommendation',type:'rec',text:'För de flesta räcker ett tröskelpass per vecka.'},
+    ],
+  },
+  {
+    id:'vo2',emoji:'🫁',title:'Vad är VO₂max?',
+    color:'#f87171',bg:'rgba(239,68,68,0.08)',
+    intro:'VO₂max är kroppens maximala förmåga att ta upp och använda syre under hårt arbete. Ju högre VO₂max, desto bättre förutsättningar har du att prestera i konditionsidrotter.',
+    sections:[
+      {title:'Fördelar',type:'list',items:[
+        'Högre maxkapacitet.',
+        'Bättre fart.',
+        'Förbättrad kondition.',
+      ]},
+      {title:'Hur tränar man VO₂max?',type:'text',text:'Vanligtvis genom intervaller på hög intensitet, till exempel:'},
+      {title:'Exempel',type:'list',items:[
+        '4 × 4 minuter',
+        '5 × 1000 meter',
+        '6 × 3 minuter',
+      ]},
+      {title:'Hur känns det?',type:'list',items:[
+        'Mycket ansträngande.',
+        'Du flåsar kraftigt.',
+        'Ansträngning: 9–10 av 10.',
+      ]},
+      {title:'Rekommendation',type:'rec',text:'Normalt ett VO₂max-pass per vecka räcker.'},
+    ],
+  },
+  {
+    id:'vila',emoji:'😴',title:'Hur ofta ska man vila?',
+    color:'#818cf8',bg:'rgba(99,102,241,0.08)',
+    intro:'Vilan är när kroppen blir starkare. Träningen bryter ner kroppen – återhämtningen bygger upp den igen.',
+    sections:[
+      {title:'Rekommendationer per nivå',type:'levels',items:[
+        {name:'Nybörjare',desc:'2–3 löppass per vecka. Vila mellan de flesta passen.'},
+        {name:'Motionär',desc:'3–5 pass per vecka. Minst 1–2 vilodagar.'},
+        {name:'Erfaren löpare',desc:'5–7 pass per vecka. Minst en lugn eller helt vilofri dag varje vecka.'},
+      ]},
+      {title:'Tecken på att du behöver vila',type:'list',items:[
+        'Ovanligt trötta ben.',
+        'Hög vilopuls.',
+        'Dålig sömn.',
+        'Minskad motivation.',
+        'Sämre prestation trots hård träning.',
+      ]},
+    ],
+  },
+  {
+    id:'oka',emoji:'📈',title:'Hur ökar man träningsmängden säkert?',
+    color:'#34d399',bg:'rgba(16,185,129,0.08)',
+    intro:'Den vanligaste orsaken till löparskador är att öka träningen för snabbt.',
+    sections:[
+      {title:'Grundregler',type:'rules',items:[
+        'Öka den totala veckodistansen med högst 5–10 % per vecka.',
+        'Öka bara en sak i taget: längre pass, fler pass, eller högre fart. Inte allt samtidigt.',
+      ]},
+      {title:'Var fjärde vecka',type:'text',text:'Minska träningsmängden med ungefär 20–30 % för att ge kroppen extra återhämtning.'},
+      {title:'Lyssna på kroppen',type:'text',text:'Lite träningsvärk är normalt, men skarp eller ihållande smärta är en signal att vila eller minska belastningen.'},
+    ],
+  },
+];
+
+function renderInfoSection(s){
+  if(s.type==='list')return`<div class="info-section"><div class="info-section-title">${s.title}</div><ul class="info-list">${s.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+  if(s.type==='text')return`<div class="info-section"><div class="info-section-title">${s.title}</div><p class="info-text">${s.text}</p></div>`;
+  if(s.type==='rec')return`<div class="info-section"><div class="info-section-title">${s.title}</div><div class="info-rec">${s.text}</div></div>`;
+  if(s.type==='levels')return`<div class="info-section"><div class="info-section-title">${s.title}</div><div class="info-grid">${s.items.map(l=>`<div class="info-level"><div class="info-level-name">${l.name}</div><div class="info-level-desc">${l.desc}</div></div>`).join('')}</div></div>`;
+  if(s.type==='rules')return`<div class="info-section"><div class="info-section-title">${s.title}</div><ul class="info-list">${s.items.map(i=>`<li>✅ ${i}</li>`).join('')}</ul></div>`;
+  return'';
+}
+
+function vInfo(){
+  return `<div class="p-4 md:p-8 mx-auto" style="max-width:680px">
+    <h1 class="page-title" style="margin-bottom:4px">Kunskap</h1>
+    <p class="page-subtitle" style="margin-bottom:20px">Förstå pulszoner, tröskel och återhämtning – så blir träningsdagboken mer än bara en loggbok.</p>
+
+    <div class="space-y-3">
+      ${INFO_CARDS.map((c,i)=>`
+        <div class="info-card card fade-in${INFO_OPEN===c.id?' open':''}" style="border-left:3px solid ${c.color};animation-delay:${i*40}ms">
+          <button class="info-card-header" onclick="toggleInfo('${c.id}')">
+            <span class="info-emoji">${c.emoji}</span>
+            <span class="info-title">${c.title}</span>
+            <span class="info-chevron" style="${INFO_OPEN===c.id?'transform:rotate(180deg)':''}">${ico('chev',18)}</span>
+          </button>
+          <div class="info-card-body${INFO_OPEN===c.id?' open':''}">
+            <p class="info-intro">${c.intro}</p>
+            ${c.sections.map(renderInfoSection).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="height:24px"></div>
+  </div>`;
+}
+
+function toggleInfo(id){
+  INFO_OPEN=INFO_OPEN===id?null:id;
+  if(V!=='info'){go('info',{keepInfo:true});return;}
+  render();
 }
 
 // ──────────────────────────────────────────────
